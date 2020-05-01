@@ -1,6 +1,5 @@
 import './basicStyle.css'
-// import GameRoot from './Game/GameRoot'
-import GameRoot from './Game/GameRoot'
+import GameRootReactWrapper from './Game/GameRootReactWrapper'
 import React from 'react'
 
 // TODO: add styled components
@@ -16,7 +15,7 @@ const styles = {
 // but pure game is non react component
 const App = () => (
   <div style={styles.backgroundStyle}>
-    <GameRoot />
+    <GameRootReactWrapper />
   </div>
 )
 

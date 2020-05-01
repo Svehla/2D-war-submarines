@@ -11,7 +11,6 @@ import {
 import { getRayCastCollisions } from './engine/rayCasting'
 import { isMobile } from '../utils'
 import { /*isArcRectCollision,*/ isTwoElementCollision } from './engine/collisions'
-import React from 'react'
 import playgroundGrid from './views/playground'
 
 // kinda shitty code
@@ -31,46 +30,44 @@ const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
   })(),
 })
 
-const view = getView()
-
-const getGameState = () => ({
-  me: {
-    x: view.leftX + view.width / 2,
-    y: view.topY + view.height / 2,
-    // constants => sign it somehow like final const
-    type: GameElementType.Circle as GameElementType,
-    radius: isMobile ? 60 : 60,
-    background: '#559',
-    maxSpeedPerSecond: isMobile ? 125 : 250,
-  } as const,
-  cameraShakeIntensity: 0,
-  playground,
-  view: getView(),
-  gameElements,
-  authCode: '',
-  volume: 0,
-  mousePosition: {
-    x: view.width / 2,
-    y: view.height / 2,
-  },
-  // speed of radar is const by timestamp
-  // ray cast is calculated from radar view
-  radar: {
-    // center coordination
-    rotation: 0,
-    sectorAngle: 30,
-    radius: 480,
-  } as Radar,
-  rayCastRays: [] as Line[],
-})
-
 /**
- *
- * base Component for handling game logic
- *
- * TODO: what about to remove react?
+ * base class for handling whole game state & logic
  */
-class GameRoot extends React.Component<{}> {
+class GameRoot {
+  static getGameState() {
+    const view = getView()
+    return {
+      me: {
+        x: view.leftX + view.width / 2,
+        y: view.topY + view.height / 2,
+        // constants => sign it somehow like final const
+        type: GameElementType.Circle as GameElementType,
+        radius: isMobile ? 60 : 60,
+        background: '#559',
+        maxSpeedPerSecond: isMobile ? 125 : 250,
+      } as const,
+      cameraShakeIntensity: 0,
+      playground,
+      view: getView(),
+      gameElements,
+      authCode: '',
+      volume: 0,
+      mousePosition: {
+        x: view.width / 2,
+        y: view.height / 2,
+      },
+      // speed of radar is const by timestamp
+      // ray cast is calculated from radar view
+      radar: {
+        // center coordination
+        rotation: 0,
+        sectorAngle: 30,
+        radius: 480,
+      } as Radar,
+      rayCastRays: [] as Line[],
+    }
+  }
+
   /**
    * it's like React.ref
    *
@@ -81,55 +78,52 @@ class GameRoot extends React.Component<{}> {
    *
    * I use this.state for triggering of render method -> its triggered by `requestAnimationFrame`
    */
-  _gameState = getGameState()
+  _gameState: ReturnType<typeof GameRoot.getGameState>
   _highResTimestamp = 0
+
   /**
    * this is used for: `request animation frame`
    *
    * inspiration:
    * > https://gist.github.com/jacob-beltran/aa114af1b6fd5de866aa365e3763a90b
    */
-  _frameId = 0
-  _canvasRef = React.createRef<HTMLCanvasElement>()
-  ctx: CanvasRenderingContext2D | null | undefined = null
+  frameId = 0
+  _canvasRef: HTMLCanvasElement
+  _ctx: CanvasRenderingContext2D
 
-  componentDidMount() {
-    window.addEventListener('mousemove', this.handleMouseMove)
-    window.addEventListener('resize', this.handleResize)
-    // init infinite gameLoop
-    this._frameId = requestAnimationFrame(this.tick)
+  constructor(_canvasRef: HTMLCanvasElement) {
+    this._canvasRef = _canvasRef
+    this._gameState = GameRoot.getGameState()
+    this.frameId = requestAnimationFrame(this._tick)
 
-    this._canvasRef.current!.width = this._gameState.view.width
-    this._canvasRef.current!.height = this._gameState.view.height
+    this._canvasRef.width = this._gameState.view.width
+    this._canvasRef.height = this._gameState.view.height
 
-    this.ctx = this._canvasRef.current?.getContext('2d')
-  }
-
-  componentWillUnmount() {
-    cancelAnimationFrame(this._frameId)
-    window.removeEventListener('mousemove', this.handleMouseMove)
-    window.removeEventListener('resize', this.handleResize)
+    this._ctx = this._canvasRef.getContext('2d')!
   }
 
   // --------------------------
   // ---- event listeners -----
+  // event listeners are not called directly but
+  // via React wrapper coz of ES destructor missing
+  // and react event handling
   // --------------------------
 
-  handleResize = (e: any) => {
+  public handleResize = (e: any) => {
     this._gameState.view.width = window.innerWidth
     this._gameState.view.height = window.innerHeight
-    this._canvasRef.current!.width = this._gameState.view.width
-    this._canvasRef.current!.height = this._gameState.view.height
+    this._canvasRef.width = this._gameState.view.width
+    this._canvasRef.height = this._gameState.view.height
   }
   // use for desktop support
-  handleMouseMove = (e: MouseEvent) => {
+  public handleMouseMove = (e: MouseEvent) => {
     const x = e.pageX
     const y = e.pageY
     this._gameState.mousePosition = { x, y }
   }
 
   // TODO: add mobile support
-  handlePlaygroundMove = (e: any) => {
+  public handlePlaygroundMove = (e: any) => {
     e.preventDefault()
     // TODO: add mobile support
     // const touch = e.touches[0]
@@ -146,47 +140,22 @@ class GameRoot extends React.Component<{}> {
   // --------------------------
   // --------- others --------
   // --------------------------
-  tick = (highResTimestamp: number) => {
+  _tick = (highResTimestamp: number) => {
     const timeSinceLastTick = highResTimestamp - this._highResTimestamp
     this._highResTimestamp = highResTimestamp
-
-    this.recalculateGameLoopState(timeSinceLastTick)
-
-    this.renderGame()
-
-    this._frameId = requestAnimationFrame(this.tick)
-  }
-
-  renderGame() {
-    const ctx = this.ctx
-    if (!ctx || !this._canvasRef.current) {
-      // console.log('cant initialize game')
-      return
-    }
-
-    const s = this._gameState
-
-    playgroundGrid(ctx, {
-      view: s.view,
-      gameElements: s.gameElements,
-      // @ts-ignore
-      me: s.me,
-      radar: s.radar,
-      mousePos: s.mousePosition,
-      rayCastRays: s.rayCastRays,
-      playground: s.playground,
-    })
+    this._recalculateGameLoopState(timeSinceLastTick)
+    this._draw()
+    this.frameId = requestAnimationFrame(this._tick)
   }
 
   /**
-   *
    * this is heart of whole game
    * each actions is recalculated by each frame in this function
    */
-  recalculateGameLoopState = (timeSinceLastTick: number) => {
+  _recalculateGameLoopState = (timeSinceLastTick: number) => {
     // todo: does not work.....
     this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
-      addViewProperty(item, view)
+      addViewProperty(item, this._gameState.view)
     )
     // TODO: add border collisions (optimise it with addViewProperty)
     const { x, y } = calculateNewObjPos(
@@ -216,7 +185,7 @@ class GameRoot extends React.Component<{}> {
 
     // borders
     this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
-      addViewProperty(item, view)
+      addViewProperty(item, this._gameState.view)
     )
 
     // check collisions
@@ -238,10 +207,6 @@ class GameRoot extends React.Component<{}> {
         // @ts-ignore
         if (!isTwoElementCollision(this._gameState.me, item)) {
           return item
-        }
-        if (item.shakingTime) {
-          // increment shaking intensity by each ate object
-          this._gameState.cameraShakeIntensity += item.shakingTime
         }
         return { ...item, deleted: true }
       })
@@ -278,20 +243,24 @@ class GameRoot extends React.Component<{}> {
     this._gameState.rayCastRays = rayCastCollisions
   }
 
-  // render method is called only once for init of app
-  render() {
-    return (
-      <>
-        <canvas
-          onTouchStart={this.handlePlaygroundMove}
-          onTouchMove={this.handlePlaygroundMove}
-          onTouchEnd={this.handlePlaygroundMove}
-          ref={this._canvasRef}
-          width={10}
-          height={10}
-        />
-      </>
-    )
+  _draw() {
+    if (!this._ctx) {
+      // console.log('cant initialize game')
+      return
+    }
+
+    const s = this._gameState
+
+    playgroundGrid(this._ctx, {
+      view: s.view,
+      gameElements: s.gameElements,
+      // @ts-ignore
+      me: s.me,
+      radar: s.radar,
+      mousePos: s.mousePosition,
+      rayCastRays: s.rayCastRays,
+      playground: s.playground,
+    })
   }
 }
 

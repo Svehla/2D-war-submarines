@@ -20,7 +20,6 @@ type PartialGameElementFood = {
   audio?: string
   seenByRadar?: number
   deleted?: boolean
-  shakingTime?: null | number
   visibleInView?: boolean
 }
 
@@ -35,7 +34,6 @@ export const createGameFoodElement = (
     background = randomColor(),
     audio = 'slowZero',
     deleted = false,
-    shakingTime = null,
     seenByRadar = 0,
     // performance tuning
     visibleInView = true,
@@ -54,7 +52,6 @@ export const createGameFoodElement = (
     audio,
     deleted,
     seenByRadar,
-    shakingTime,
     visibleInView,
     ...properties,
   }

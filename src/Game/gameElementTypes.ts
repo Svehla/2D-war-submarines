@@ -72,7 +72,6 @@ export type GameElementFoodProps = GameElementProps & {
   audio: string
   seenByRadar: number
   deleted: boolean
-  shakingTime: null | number
 }
 
 export type GameElementFoodType = GameElementType.Rectangle | GameElementType.Circle
