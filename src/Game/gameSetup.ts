@@ -37,7 +37,7 @@ export const playground = {
           y: helperY,
         },
         {
-          x: helperX + 300,
+          x: helperX + 350,
           y: helperY + 240,
         },
         {

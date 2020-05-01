@@ -1,4 +1,5 @@
 import './basicStyle.css'
+// import GameRoot from './Game/GameRoot'
 import GameRoot from './Game/GameRoot'
 import React from 'react'
 
@@ -11,6 +12,8 @@ const styles = {
   },
 } as const
 
+// react is there used for menus etc...
+// but pure game is non react component
 const App = () => (
   <div style={styles.backgroundStyle}>
     <GameRoot />

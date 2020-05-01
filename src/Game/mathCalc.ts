@@ -123,12 +123,12 @@ export const distance = (a: Point, b: Point) => {
  */
 export const getDistance = (
   mousePos: MousePos,
-  currentPos: CenterElement,
+  view: View,
   maxSpeedPerSecond: number,
   timeSinceLastTick: number
 ) => {
-  const xDiff = mousePos.x - currentPos.xRel // division by zero => .js Infinity
-  const yDiff = mousePos.y - currentPos.yRel
+  const xDiff = mousePos.x - view.width / 2 // division by zero => .js Infinity
+  const yDiff = mousePos.y - view.height / 2
   const tanRatio = yDiff / xDiff
   const tanAngle = Math.atan(tanRatio)
   const c = pythagorC(xDiff, yDiff)
@@ -156,19 +156,20 @@ const addShaking = (cameraShakeIntensity: number, axisPosition: number) =>
 
 export const calculateNewObjPos = (
   mousePos: MousePos,
-  meElement: CenterElement,
+  view: View,
+  meElement: Circle & { maxSpeedPerSecond: number },
   timeSinceLastTick: number,
   playground: Playground,
   { cameraShakeIntensity }: { cameraShakeIntensity: number }
 ) => {
   const { distanceX, distanceY } = getDistance(
     mousePos,
-    meElement,
+    view,
     meElement.maxSpeedPerSecond,
     timeSinceLastTick
   )
-  const x = calculateProgress(mousePos.x, meElement.x, meElement.xRel, distanceX)
-  const y = calculateProgress(mousePos.y, meElement.y, meElement.yRel, distanceY)
+  const x = calculateProgress(mousePos.x, meElement.x, view.width / 2, distanceX)
+  const y = calculateProgress(mousePos.y, meElement.y, view.height / 2, distanceY)
 
   // todo: check playground collisions
 

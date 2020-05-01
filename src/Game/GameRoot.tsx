@@ -1,6 +1,5 @@
 import './rayCasting'
 import { GameElement, GameElementType, Line, Radar } from './gameElementTypes'
-import { KonvaEventObject } from 'konva/types/Node'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
 import {
   View,
@@ -12,8 +11,8 @@ import {
 import { getRayCastCollisions } from './rayCasting'
 import { isMobile } from '../utils'
 import { /*isArcRectCollision,*/ isTwoElementCollision } from './collisions'
-import Playground from './Playground'
 import React from 'react'
+import playgroundGrid from './views/playground'
 
 // kinda shitty code
 const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
@@ -36,25 +35,18 @@ const view = getView()
 
 const getGameState = () => ({
   me: {
-    // absolute coordinations
     x: view.leftX + view.width / 2,
     y: view.topY + view.height / 2,
-    // relative coordinations
     // constants => sign it somehow like final const
-    xRel: view.width / 2,
-    yRel: view.height / 2,
     type: GameElementType.Circle as GameElementType,
     radius: isMobile ? 60 : 60,
-    shadowOffsetX: 20,
-    shadowOffsetY: 25,
-    shadowBlur: 40,
     background: '#559',
     maxSpeedPerSecond: isMobile ? 125 : 250,
-  },
+  } as const,
   cameraShakeIntensity: 0,
   playground,
   view: getView(),
-  gameElements: gameElements,
+  gameElements,
   authCode: '',
   volume: 0,
   mousePosition: {
@@ -67,7 +59,7 @@ const getGameState = () => ({
     // center coordination
     rotation: 0,
     sectorAngle: 30,
-    radius: 480,
+    radius: 280,
   } as Radar,
   rayCastRays: [] as Line[],
 })
@@ -98,23 +90,37 @@ class GameRoot extends React.Component<{}> {
    * > https://gist.github.com/jacob-beltran/aa114af1b6fd5de866aa365e3763a90b
    */
   _frameId = 0
+  _canvasRef = React.createRef<HTMLCanvasElement>()
+  ctx: CanvasRenderingContext2D | null | undefined = null
 
   componentDidMount() {
     window.addEventListener('mousemove', this.handleMouseMove)
-
+    window.addEventListener('resize', this.handleResize)
     // init infinite gameLoop
     this._frameId = requestAnimationFrame(this.tick)
+
+    this._canvasRef.current!.width = this._gameState.view.width
+    this._canvasRef.current!.height = this._gameState.view.height
+
+    this.ctx = this._canvasRef.current?.getContext('2d')
   }
 
   componentWillUnmount() {
     cancelAnimationFrame(this._frameId)
     window.removeEventListener('mousemove', this.handleMouseMove)
+    window.removeEventListener('resize', this.handleResize)
   }
 
   // --------------------------
   // ---- event listeners -----
   // --------------------------
 
+  handleResize = (e: any) => {
+    this._gameState.view.width = window.innerWidth
+    this._gameState.view.height = window.innerHeight
+    this._canvasRef.current!.width = this._gameState.view.width
+    this._canvasRef.current!.height = this._gameState.view.height
+  }
   // use for desktop support
   handleMouseMove = (e: MouseEvent) => {
     const x = e.pageX
@@ -122,29 +128,54 @@ class GameRoot extends React.Component<{}> {
     this._gameState.mousePosition = { x, y }
   }
 
-  // use for mobile devices support
-  handlePlaygroundMove = (e: KonvaEventObject<Event>) => {
+  // TODO: add mobile support
+  handlePlaygroundMove = (e: any) => {
+    e.preventDefault()
+    // TODO: add mobile support
+    // const touch = e.touches[0]
+    // const mouseEvent = new MouseEvent('mousemove', {
+    //   clientX: touch.clientX,
+    //   clientY: touch.clientY,
+    // })
+    // this._canvasRef.current?.dispatchEvent(mouseEvent)
     // @ts-ignore
-    const { x, y } = e.target.getStage().getPointerPosition()
-    this._gameState.mousePosition = { x, y }
+    // const { x, y } = e.target.getStage().getPointerPosition()
+    // this._gameState.mousePosition = { x, y }
   }
 
   // --------------------------
   // --------- others --------
   // --------------------------
-
   tick = (highResTimestamp: number) => {
     const timeSinceLastTick = highResTimestamp - this._highResTimestamp
     this._highResTimestamp = highResTimestamp
 
     this.recalculateGameLoopState(timeSinceLastTick)
-    // let react call render method
-    // TODO: is react efficient way for app like this? what about pure canvas/konva?
-    this.setState({})
 
-    // setTimeout(() => {
+    this.renderGame()
+
     this._frameId = requestAnimationFrame(this.tick)
-    // }, 100)
+  }
+
+  renderGame() {
+    const ctx = this.ctx
+    if (!ctx || !this._canvasRef.current) {
+      // console.log('cant initialize game')
+      return
+    }
+
+    const s = this._gameState
+
+    playgroundGrid(ctx, {
+      view: s.view,
+      gameElements: s.gameElements,
+      // @ts-ignore
+      me: s.me,
+      radar: s.radar,
+      mousePos: s.mousePosition,
+      rayCastRays: s.rayCastRays,
+      playground: s.playground,
+    })
   }
 
   /**
@@ -160,6 +191,7 @@ class GameRoot extends React.Component<{}> {
     // TODO: add border collisions (optimise it with addViewProperty)
     const { x, y } = calculateNewObjPos(
       this._gameState.mousePosition,
+      this._gameState.view,
       this._gameState.me,
       timeSinceLastTick,
       this._gameState.playground,
@@ -246,19 +278,19 @@ class GameRoot extends React.Component<{}> {
     this._gameState.rayCastRays = rayCastCollisions
   }
 
+  // render method is called only once for init of app
   render() {
     return (
-      <Playground
-        view={this._gameState.view}
-        gameElements={this._gameState.gameElements}
-        me={this._gameState.me}
-        radar={this._gameState.radar}
-        cameraShakeIntensity={this._gameState.cameraShakeIntensity}
-        mousePos={this._gameState.mousePosition}
-        handlePlaygroundMove={this.handlePlaygroundMove}
-        rayCastRays={this._gameState.rayCastRays}
-        playground={this._gameState.playground}
-      />
+      <>
+        <canvas
+          onTouchStart={this.handlePlaygroundMove}
+          onTouchMove={this.handlePlaygroundMove}
+          onTouchEnd={this.handlePlaygroundMove}
+          ref={this._canvasRef}
+          width={10}
+          height={10}
+        />
+      </>
     )
   }
 }
