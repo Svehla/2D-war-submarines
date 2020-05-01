@@ -1,5 +1,6 @@
-import { GameElement, GameElementType, Point } from './gameElementTypes'
-import { RADAR_LOOP_SPEED } from './gameSetup'
+import { Circle, GameElement, GameElementType, Point } from './gameElementTypes'
+import { Playground, RADAR_LOOP_SPEED } from './gameSetup'
+import { isPolygonCircleCollision } from './rayCasting'
 
 // todo: extract types out of `mathCalc.js` to another file
 export type View = {
@@ -31,7 +32,7 @@ export type CurrentPosition = {
   yRel: number
 }
 
-export type CenterElement = { maxSpeedPerSecond: number } & CurrentPosition & AbsoluteCoord
+export type CenterElement = { maxSpeedPerSecond: number } & CurrentPosition & AbsoluteCoord & Circle
 
 /*******************************/
 /*********** angles ************/
@@ -100,6 +101,7 @@ export const calculateProgress = (
  */
 // todo: make variable for slow down the radar
 export const calcNewRadarRotation = () => {
+  // return 0
   const ms = new Date().getTime()
 
   const currentCircle = ms % RADAR_LOOP_SPEED
@@ -156,7 +158,7 @@ export const calculateNewObjPos = (
   mousePos: MousePos,
   meElement: CenterElement,
   timeSinceLastTick: number,
-  playground: { width: number; height: number },
+  playground: Playground,
   { cameraShakeIntensity }: { cameraShakeIntensity: number }
 ) => {
   const { distanceX, distanceY } = getDistance(
@@ -167,6 +169,23 @@ export const calculateNewObjPos = (
   )
   const x = calculateProgress(mousePos.x, meElement.x, meElement.xRel, distanceX)
   const y = calculateProgress(mousePos.y, meElement.y, meElement.yRel, distanceY)
+
+  // todo: check playground collisions
+
+  // console.log({ x, y })
+  // shitttty code!!
+  const isCollision = playground.walls
+    // negation!!!!
+    .map(wall => isPolygonCircleCollision({ x, y, radius: meElement.radius }, wall))
+    .flat()
+    // @ts-ignore
+    .some(c => c === true)
+
+  // console.log(isCollision)
+
+  if (isCollision) {
+    return meElement
+  }
   // calculate new pos and stay in playground
   const xWithBorder = stayInRange(x, { min: 0, max: playground.width })
   const yWithBorder = stayInRange(y, { min: 0, max: playground.height })

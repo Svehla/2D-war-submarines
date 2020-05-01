@@ -15,34 +15,49 @@ export const RAY_COUNT = 50
 // export const RADAR_LOOP_SPEED = 15000
 export const RADAR_LOOP_SPEED = 2000
 export const RADAR_VISIBLE_DELAY = RADAR_LOOP_SPEED / 2 // ms
+
+const helperX = view.leftX + view.width / 2
+const helperY = view.topY + view.height / 2
+
 export const playground = {
   width: isMobile ? 5500 : 5500,
   height: isMobile ? 2500 : 5000,
-  borders: [
+  // todo: rename it to: walls
+  walls: [
     createGameBorderElement({
       background: 'red',
       // TODO: draw playground in some external program
       points: [
         {
-          x: -100 + view.leftX + view.width / 2 + 400,
-          y: -50 + view.topY + view.height / 2,
+          x: helperX + 200,
+          y: helperY - 100,
         },
         {
-          x: view.leftX + view.width / 2 + 400 + 5,
-          y: -50 + view.topY + view.height / 2 + 400,
+          x: helperX + 300,
+          y: helperY,
         },
         {
-          x: -350 + view.topY + view.height / 2 + 400,
-          y: -160 + view.leftX + view.width / 2 + 400 + 5,
+          x: helperX + 300,
+          y: helperY + 240,
         },
         {
-          x: -100 + view.leftX + view.width / 2 + 400 + 5,
-          y: 100 + view.topY + view.height / 2 + 500,
+          x: helperX + 100,
+          y: helperY + 200,
+        },
+        {
+          x: helperX,
+          y: helperY + 150,
+        },
+        {
+          x: helperX + 250,
+          y: helperY + 100,
         },
       ],
     }),
   ],
 }
+
+export type Playground = typeof playground
 
 export const gameElements: GameElementFood[] = [
   ...createGameFoodElements(100, GameElementType.Rectangle, {

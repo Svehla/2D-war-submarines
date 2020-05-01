@@ -50,9 +50,8 @@ const PlaygroundGrid = (props: Props) => {
       <Layer>
         <BorderGrid view={view} isDark={cameraShakeIntensity > 0} />
         {/* bad naming with mountains etc... */}
-        {playground.borders.map(
-          border =>
-            border.visibleInView && <PolygonBorder view={view} key={border.id} {...border} />
+        {playground.walls.map(
+          wall => wall.visibleInView && <PolygonBorder view={view} key={wall.id} {...wall} />
         )}
         {gameElements.map(
           item =>

@@ -142,7 +142,9 @@ class GameRoot extends React.Component<{}> {
     // TODO: is react efficient way for app like this? what about pure canvas/konva?
     this.setState({})
 
+    // setTimeout(() => {
     this._frameId = requestAnimationFrame(this.tick)
+    // }, 100)
   }
 
   /**
@@ -152,7 +154,7 @@ class GameRoot extends React.Component<{}> {
    */
   recalculateGameLoopState = (timeSinceLastTick: number) => {
     // todo: does not work.....
-    this._gameState.playground.borders = this._gameState.playground.borders.map(item =>
+    this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
       addViewProperty(item, view)
     )
     // TODO: add border collisions (optimise it with addViewProperty)
@@ -181,8 +183,8 @@ class GameRoot extends React.Component<{}> {
     this._gameState.radar.rotation = newRadarRotationAngle
 
     // borders
-    this._gameState.playground.borders = this._gameState.playground.borders.map(
-      item => addViewProperty(item, view) as any
+    this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
+      addViewProperty(item, view)
     )
 
     // check collisions
@@ -230,7 +232,7 @@ class GameRoot extends React.Component<{}> {
         ...this._gameState.radar,
         startAngle: this._gameState.radar.rotation,
       },
-      [...visibleGameElements, ...this._gameState.playground.borders]
+      [...visibleGameElements, ...this._gameState.playground.walls]
     )
 
     // make radar elements collisions visible

@@ -1,8 +1,91 @@
 import { Angle, distance, findMinByKey } from './mathCalc'
-import { Arc, GameElement, GameElementType, Line, Point, Polygon } from './gameElementTypes'
+import { Arc, Circle, GameElement, GameElementType, Line, Point, Polygon } from './gameElementTypes'
 import { RAY_COUNT } from './gameSetup'
 import { notNullable } from '../utils'
 
+// @ts-ignore
+const collidePointLine = (px, py, x1, y1, x2, y2, buffer) => {
+  // get distance from the point to the two ends of the line
+  const d1 = distance({ x: px, y: py }, { x: x1, y: y1 })
+  const d2 = distance({ x: px, y: py }, { x: x2, y: y2 })
+
+  // get the length of the line
+  const lineLen = distance({ x: x1, y: y1 }, { x: x2, y: y2 })
+
+  // since floats are so minutely accurate, add a little buffer zone that will give collision
+  if (buffer === undefined) {
+    buffer = 0.1
+  } // higher # = less accurate
+
+  // if the two distances are equal to the line's length, the point is on the line!
+  // note we use the buffer here to give a range, rather than one #
+  if (d1 + d2 >= lineLen - buffer && d1 + d2 <= lineLen + buffer) {
+    return true
+  }
+  return false
+}
+// d === diameter
+const collidePointCircle = (x: number, y: number, cx: number, cy: number, d: number) => {
+  if (distance({ x, y }, { x: cx, y: cy }) <= d / 2) {
+    return true
+  }
+  return false
+}
+
+// inspiration
+// > https://github.com/bmoren/p5.collide2D/blob/master/p5.collide2d.js#L112
+export const collideLineCircle = (line: Line, circle: Circle) => {
+  const { x1, y1, x2, y2 } = line
+  const { x: cx, y: cy, radius } = circle
+  const diameter = radius * 2
+
+  // is either end INSIDE the circle?
+  // if so, return true immediately
+  const inside1 = collidePointCircle(x1, y1, cx, cy, diameter)
+  const inside2 = collidePointCircle(x2, y2, cx, cy, diameter)
+  if (inside1 || inside2) return true
+
+  // get length of the line
+  let distX = x1 - x2
+  let distY = y1 - y2
+  const len = Math.sqrt(distX * distX + distY * distY)
+
+  // get dot product of the line and circle
+  const dot = ((cx - x1) * (x2 - x1) + (cy - y1) * (y2 - y1)) / Math.pow(len, 2)
+
+  // find the closest point on the line
+  const closestX = x1 + dot * (x2 - x1)
+  const closestY = y1 + dot * (y2 - y1)
+
+  // is this point actually on the line segment?
+  // if so keep going, but if not, return false
+  // @ts-ignore
+  const onSegment = collidePointLine(closestX, closestY, x1, y1, x2, y2)
+  if (!onSegment) return false
+
+  // get distance to closest point
+  distX = closestX - cx
+  distY = closestY - cy
+  const distance = Math.sqrt(distX * distX + distY * distY)
+
+  if (distance <= diameter / 2) {
+    return true
+  }
+  return false
+}
+
+export const isPolygonCircleCollision = (circle: Circle, polygon: Polygon) => {
+  // todo: extract it to polygon structure (like: get polygon Lines)
+  const polygonLines = polygon.points.map((point, index) => ({
+    x1: point.x,
+    y1: point.y,
+    // lol, im genius => connect last point with the first one
+    x2: polygon.points[(index + 1) % polygon.points.length].x,
+    y2: polygon.points[(index + 1) % polygon.points.length].y,
+  }))
+
+  return polygonLines.map(line => collideLineCircle(line, circle))
+}
 /**
  *
  * inspiration from:
@@ -130,6 +213,7 @@ export const getRayCastCollisions = (arc: Arc, gameElements: GameElement[]) => {
         }
       }
       return {
+        distance: shortestDistance.distance,
         collisionId: shortestDistance.id,
         x1: rayLine.x1,
         y1: rayLine.y1,
