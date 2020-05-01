@@ -1,13 +1,13 @@
 import { Circle, GameElementFood, Line, Point, Radar } from '../gameElementTypes'
-import { View } from '../mathCalc'
+import { View } from '../engine/mathCalc'
 import { playground } from '../gameSetup'
 import borderGrid from './borderGrid'
-import meElem from './me'
+import meView from './me'
 import mousePosCircle from './mousePosCircle'
-import polygonBorder from './polygonBorder'
 import radarView from './radarView'
 import rayCast from './rayCast'
 import renderGameElement from './gameElement'
+import wallView from './wall'
 
 type Props = {
   view: View
@@ -34,22 +34,22 @@ const playgroundGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
   })
 
   // @ts-ignore
-  meElem(ctx, { view: view, me })
+  meView(ctx, { view: view, me })
   radarView(ctx, { view: view, radar: radar })
   rayCast(ctx, { view: view, rays: rayCastRays })
 
   playground.walls.forEach(
     // @ts-ignore
-    wall => wall.visibleInView && polygonBorder(ctx, { view, ...wall })
+    wall => wall.visibleInView && wallView(ctx, { view, ...wall })
   )
 
   gameElements.forEach(
-    item =>
-      // item.visibleInView &&
-      item.seenByRadar > 0 &&
-      !item.deleted &&
+    gameElement =>
+      gameElement.visibleInView &&
+      gameElement.seenByRadar > 0 &&
+      !gameElement.deleted &&
       // @ts-ignore
-      renderGameElement(ctx, { view, element: item })
+      renderGameElement(ctx, { view, element: gameElement })
   )
 
   mousePosCircle(ctx, { mousePos })

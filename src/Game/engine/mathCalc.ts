@@ -1,5 +1,5 @@
-import { Circle, GameElement, GameElementType, Point } from './gameElementTypes'
-import { Playground, RADAR_LOOP_SPEED } from './gameSetup'
+import { Circle, GameElement, GameElementType, Point } from '../gameElementTypes'
+import { Playground, RADAR_LOOP_SPEED } from '../gameSetup'
 import { isPolygonCircleCollision } from './rayCasting'
 
 // todo: extract types out of `mathCalc.js` to another file
@@ -127,7 +127,7 @@ export const getDistance = (
   maxSpeedPerSecond: number,
   timeSinceLastTick: number
 ) => {
-  const xDiff = mousePos.x - view.width / 2 // division by zero => .js Infinity
+  const xDiff = mousePos.x - view.width / 2
   const yDiff = mousePos.y - view.height / 2
   const tanRatio = yDiff / xDiff
   const tanAngle = Math.atan(tanRatio)
@@ -225,6 +225,8 @@ export const getInRange = (num: number, range = 1) => stayInRange(num, { min: -r
  *
  * todo: add support for Polygons
  * todo: implement this fn via collisions :| now its shitty
+ *
+ * todo: should not depends on the game => just engine stuff
  */
 export const isInView = (view: View, gameElement: GameElement): boolean => {
   let height = null

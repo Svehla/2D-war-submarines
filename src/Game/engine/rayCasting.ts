@@ -1,7 +1,15 @@
 import { Angle, distance, findMinByKey } from './mathCalc'
-import { Arc, Circle, GameElement, GameElementType, Line, Point, Polygon } from './gameElementTypes'
-import { RAY_COUNT } from './gameSetup'
-import { notNullable } from '../utils'
+import {
+  Arc,
+  Circle,
+  GameElement,
+  GameElementType,
+  Line,
+  Point,
+  Polygon,
+} from '../gameElementTypes'
+import { RAY_COUNT } from '../gameSetup'
+import { notNullable } from '../../utils'
 
 // @ts-ignore
 const collidePointLine = (px, py, x1, y1, x2, y2, buffer) => {

@@ -1,6 +1,6 @@
 import { GameElementFood, GameElementType } from '../gameElementTypes'
 import { RADAR_VISIBLE_DELAY } from '../gameSetup'
-import { View, getRelativePosByAbsPos, normalizeInto01 } from '../mathCalc'
+import { View, getRelativePosByAbsPos, normalizeInto01 } from '../engine/mathCalc'
 
 type Props = {
   element: GameElementFood

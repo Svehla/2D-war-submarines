@@ -1,4 +1,4 @@
-import './rayCasting'
+import './engine/rayCasting'
 import { GameElement, GameElementType, Line, Radar } from './gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
 import {
@@ -7,10 +7,10 @@ import {
   calculateNewObjPos,
   decreaseBy1ToZero,
   isInView,
-} from './mathCalc'
-import { getRayCastCollisions } from './rayCasting'
+} from './engine/mathCalc'
+import { getRayCastCollisions } from './engine/rayCasting'
 import { isMobile } from '../utils'
-import { /*isArcRectCollision,*/ isTwoElementCollision } from './collisions'
+import { /*isArcRectCollision,*/ isTwoElementCollision } from './engine/collisions'
 import React from 'react'
 import playgroundGrid from './views/playground'
 
@@ -59,7 +59,7 @@ const getGameState = () => ({
     // center coordination
     rotation: 0,
     sectorAngle: 30,
-    radius: 280,
+    radius: 480,
   } as Radar,
   rayCastRays: [] as Line[],
 })

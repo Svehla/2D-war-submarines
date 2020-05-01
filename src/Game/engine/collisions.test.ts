@@ -1,4 +1,4 @@
-import { GameElementType } from './gameElementTypes'
+import { GameElementType } from '../gameElementTypes'
 import { _isPointArcCollision } from './collisions'
 
 describe('arc collisions', () => {

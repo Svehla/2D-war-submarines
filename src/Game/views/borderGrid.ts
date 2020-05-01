@@ -1,7 +1,7 @@
-import { View, getRelativePosByAbsPos } from '../mathCalc'
+import { View, getRelativePosByAbsPos } from '../engine/mathCalc'
 import { playground } from '../gameSetup'
-import gridImage from '../img/grid.png'
-import gridReverseImage from '../img/grid-reverse.png'
+import gridImage from './img/grid.png'
+import gridReverseImage from './img/grid-reverse.png'
 
 const playgroundCoords = {
   x: 0,

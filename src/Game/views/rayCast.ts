@@ -1,5 +1,5 @@
 import { Line } from '../gameElementTypes'
-import { View, getRelativePosByAbsPos } from '../mathCalc'
+import { View, getRelativePosByAbsPos } from '../engine/mathCalc'
 
 type Props = {
   view: View

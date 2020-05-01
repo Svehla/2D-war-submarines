@@ -1,6 +1,6 @@
 // what about to use some library?
 // https://github.com/bmoren/p5.collide2D
-import { Angle, distance, isAngleInArcSector } from './mathCalc'
+import { Angle, distance, isAngleInArcSector } from '../engine/mathCalc'
 import {
   Arc,
   Circle,
@@ -9,7 +9,7 @@ import {
   Point,
   Polygon,
   Rectangle,
-} from './gameElementTypes'
+} from '../gameElementTypes'
 
 export const isTwoElementCollision = (circleShape1: Circle, shape2: GameElement) => {
   switch (shape2.type) {

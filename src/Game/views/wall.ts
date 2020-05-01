@@ -1,5 +1,5 @@
 import { Point } from '../gameElementTypes'
-import { View, getRelativePosByAbsPos } from '../mathCalc'
+import { View, getRelativePosByAbsPos } from '../engine/mathCalc'
 
 type Props = {
   view: View
@@ -7,7 +7,7 @@ type Props = {
   points: Point[]
 }
 
-const polygonBorder = (ctx: CanvasRenderingContext2D, { view, points, background }: Props) => {
+const wall = (ctx: CanvasRenderingContext2D, { view, points, background }: Props) => {
   const linePoints = points.map(point => getRelativePosByAbsPos(view, point))
 
   ctx.beginPath()
@@ -18,7 +18,6 @@ const polygonBorder = (ctx: CanvasRenderingContext2D, { view, points, background
   ctx.closePath()
   ctx.fillStyle = background
   ctx.fill()
-  ctx.stroke()
 }
 
-export default polygonBorder
+export default wall

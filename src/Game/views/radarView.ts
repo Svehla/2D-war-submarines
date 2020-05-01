@@ -1,6 +1,6 @@
-import { Angle } from '../mathCalc'
+import { Angle } from '../engine/mathCalc'
 import { Radar } from '../gameElementTypes'
-import { View } from '../mathCalc'
+import { View } from '../engine/mathCalc'
 
 type Props = {
   view: View
