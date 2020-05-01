@@ -160,6 +160,7 @@ export const calculateNewObjPos = (
   meElement: Circle & { maxSpeedPerSecond: number },
   timeSinceLastTick: number,
   playground: Playground,
+  // todo: remove cameraShakeIntensity
   { cameraShakeIntensity }: { cameraShakeIntensity: number }
 ) => {
   const { distanceX, distanceY } = getDistance(
@@ -174,7 +175,8 @@ export const calculateNewObjPos = (
   // todo: check playground collisions
 
   // console.log({ x, y })
-  // shitttty code!!
+  // todo: make it move on the non blocking axis
+  // similar like: stayInRange for x and y axis
   const isCollision = playground.walls
     // negation!!!!
     .map(wall => isPolygonCircleCollision({ x, y, radius: meElement.radius }, wall))

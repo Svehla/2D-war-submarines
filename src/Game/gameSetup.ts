@@ -1,6 +1,8 @@
 import { GameElementFood, GameElementType } from './gameElementTypes'
 import { createGameBorderElement, createGameFoodElements } from './createGameElements'
+import { getLinesFromShape } from './helpers/mapGenerator'
 import { isMobile } from '../utils'
+import shape1 from './helpers/shape1'
 
 export const getView = () => ({
   width: window.innerWidth,
@@ -14,11 +16,19 @@ const view = getView()
 export const RAY_COUNT = 50
 // export const RADAR_LOOP_SPEED = 15000
 // export const RADAR_LOOP_SPEED = 2000
-export const RADAR_LOOP_SPEED = 1500
+export const RADAR_LOOP_SPEED = 1000
 export const RADAR_VISIBLE_DELAY = RADAR_LOOP_SPEED / 2 // ms
 
 const helperX = view.leftX + view.width / 2
 const helperY = view.topY + view.height / 2
+
+const myPolygon = getLinesFromShape(shape1, {
+  // x: 0,
+  // y: 1,
+  x: 28,
+  y: 0,
+})
+console.log(myPolygon)
 
 export const playground = {
   width: isMobile ? 5500 : 5500,
@@ -28,32 +38,7 @@ export const playground = {
     createGameBorderElement({
       background: 'red',
       // TODO: draw playground in some external program
-      points: [
-        {
-          x: helperX + 200,
-          y: helperY - 100,
-        },
-        {
-          x: helperX + 300,
-          y: helperY,
-        },
-        {
-          x: helperX + 350,
-          y: helperY + 240,
-        },
-        {
-          x: helperX + 100,
-          y: helperY + 200,
-        },
-        {
-          x: helperX,
-          y: helperY + 150,
-        },
-        {
-          x: helperX + 250,
-          y: helperY + 100,
-        },
-      ],
+      points: myPolygon.points.map(({ x, y }) => ({ x: 200 + x * 20, y: 900 + y * 20 })),
     }),
   ],
 }
@@ -68,3 +53,13 @@ export const gameElements: GameElementFood[] = [
     audio: 'growl',
   }),
 ]
+
+// console.log(
+//   JSON.stringify(
+//     myPolygon.points.map(({ x, y }) => ({ x: 400 + x * 10, y: 400 + y * 10 })),
+//     null,
+//     2
+//   )
+// )
+
+console.log(playground.walls)
