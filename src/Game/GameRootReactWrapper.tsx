@@ -28,7 +28,7 @@ class GameRootReactWrapper extends React.Component<{}> {
     window.removeEventListener('resize', this._game.handleResize)
   }
 
-  // render method is called only once for init of app
+  // render method is called only for init of app (just 2. times)
   render() {
     return (
       <canvas
