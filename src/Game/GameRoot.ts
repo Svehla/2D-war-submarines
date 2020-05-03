@@ -38,15 +38,15 @@ class GameRoot {
     const view = getView()
     return {
       me: {
-        x: view.leftX + view.width / 2,
-        y: view.topY + view.height / 2,
+        x: view.x + view.width / 2,
+        y: view.y + view.height / 2,
         // constants => sign it somehow like final const
         type: GameElementType.Circle as GameElementType,
+        // radius: 5,
         radius: isMobile ? 60 : 60,
         background: '#559',
         maxSpeedPerSecond: isMobile ? 125 : 250,
       } as const,
-      cameraShakeIntensity: 0,
       playground,
       view: getView(),
       gameElements,
@@ -145,7 +145,9 @@ class GameRoot {
     this._highResTimestamp = highResTimestamp
     this._recalculateGameLoopState(timeSinceLastTick)
     this._draw()
+    // setTimeout(() => {
     this.frameId = requestAnimationFrame(this._tick)
+    // }, 200)
   }
 
   /**
@@ -163,10 +165,7 @@ class GameRoot {
       this._gameState.view,
       this._gameState.me,
       timeSinceLastTick,
-      this._gameState.playground,
-      {
-        cameraShakeIntensity: this._gameState.cameraShakeIntensity,
-      }
+      this._gameState.playground
     )
 
     // update static tick stuffs (radar & view & my position)
@@ -175,8 +174,8 @@ class GameRoot {
       me: { ...this._gameState.me, x, y },
       view: {
         ...this._gameState.view,
-        leftX: x - this._gameState.view.width / 2,
-        topY: y - this._gameState.view.height / 2,
+        x: x - this._gameState.view.width / 2,
+        y: y - this._gameState.view.height / 2,
       },
     }
 
@@ -215,8 +214,6 @@ class GameRoot {
       ...item,
       seenByRadar: item.seenByRadar > 0 ? item.seenByRadar - timeSinceLastTick : 0,
     }))
-
-    this._gameState.cameraShakeIntensity = decreaseBy1ToZero(this._gameState.cameraShakeIntensity)
 
     const visibleGameElements = this._gameState.gameElements.filter(
       e => e.visibleInView && !e.deleted

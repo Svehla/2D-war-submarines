@@ -1,15 +1,11 @@
-import { Circle, GameElement, GameElementType, Point } from '../gameElementTypes'
-import { Playground, RADAR_LOOP_SPEED } from '../gameSetup'
+import { Circle, GameElement, GameElementType, Line, Point, Rectangle } from '../gameElementTypes'
+import { Playground, RADAR_LOOP_SPEED, playground } from '../gameSetup'
+import { createGameBorderElement } from '../createGameElements'
 import { isPolygonCircleCollision } from './rayCasting'
 
 // todo: extract types out of `mathCalc.js` to another file
-export type View = {
-  width: number
-  height: number
-  // absolute coordination for view in playground
-  leftX: number
-  topY: number
-}
+// todo: extends Rectangle which extends Point
+export type View = Rectangle
 
 // Coordination
 export type Coord = {
@@ -18,11 +14,6 @@ export type Coord = {
 }
 
 export type AbsoluteCoord = {
-  x: number
-  y: number
-}
-
-export type MousePos = {
   x: number
   y: number
 }
@@ -81,16 +72,6 @@ export const decreaseBy1ToZero = (num: number) => Math.max(num - 1, 0)
 
 export const pythagorC = (a: number, b: number) => Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2))
 
-// TODO: fn in math module should be more app agnostic (not mouse pos i guess -> prefer to use Point)
-export const calculateProgress = (
-  axisMousePos: number,
-  currPosAbs: number,
-  currPosRel: number,
-  distance: number
-) => {
-  return axisMousePos > currPosRel ? currPosAbs + distance : currPosAbs - distance
-}
-
 /**
  *
  * radar has to have position by timestamp (aka it has to be synchronized by server)
@@ -119,84 +100,289 @@ export const distance = (a: Point, b: Point) => {
 }
 
 /**
- * return new relative movement for element
+ *
+ * ## How does it work
+ * for each sector i calculate ratio of triangle sides
+ *
+ * `atan` calculate opposite to adjacent side.In our case its `y/x` like:
+ *
+ * ```
+ * | q. 1 |  q.2 | q. 3 | q. 4 |
+ * |------|------|------|------|
+ * |      |      |      |      |
+ * | C___ | C___ | C    |    C |
+ * |    | | |    | |    |    | |
+ * |  \ | | | /  | | \  |  / | |
+ * |    y | y    | ___x | x___ |
+ * |      |      |      |      |
+ * |------|------|------|------|
+ * ```
+ * * x -> x axis
+ * * y -> y axis
+ * * C -> relative center (0, 0)
+ *
+ * on diagram below you can see math quadrants
+ *
+ * ```
+ * |-------|-------|
+ * | 3→ pa | 4↓ na |
+ * |-------|-------| 0deg - 360deg
+ * | ↑2 na | ←1 pa |
+ * |-------|-------|
+ * * pa -> returns positive angle
+ * * na -> returns negative angle
+ * ```
+ *
+ * returns positive or negative relative x and y coord
+ * return number between o to 360
+ *
+ * first point is the centered one (not now...lol)
  */
-export const getDistance = (
-  mousePos: MousePos,
+const getAngleBetweenPoints = (angleFromP: Point, angleToP: Point) => {
+  // relative coords
+  const xDiff = angleToP.x - angleFromP.x
+  const yDiff = angleToP.y - angleFromP.y
+
+  if (xDiff === 0 && yDiff === 0) {
+    return 0
+  }
+  // opposite to adjacent triangle side
+  // find proper angle for cursor position by your element
+  const arcRecCalcAngle = Angle.toDegrees(Math.atan(yDiff / xDiff))
+
+  let arcRecAngle
+  if (xDiff < 0) {
+    // quadrant 2 & 3
+    arcRecAngle = Angle.add(180, arcRecCalcAngle)
+  } else {
+    // quadrant 1 & 4
+    arcRecAngle = Angle.to360Range(arcRecCalcAngle)
+  }
+  return arcRecAngle
+}
+console.log(getAngleBetweenPoints({ x: 10, y: 10 }, { x: 20, y: 15 }))
+
+const ACCELERATION_SPEED_COEFFICIENT = 40
+export const getElShift = (
+  mousePos: Point,
   view: View,
   maxSpeedPerSecond: number,
   timeSinceLastTick: number
-) => {
-  const xDiff = mousePos.x - view.width / 2
-  const yDiff = mousePos.y - view.height / 2
-  const tanRatio = yDiff / xDiff
-  const tanAngle = Math.atan(tanRatio)
-  const c = pythagorC(xDiff, yDiff)
-  // TODO: some random constants?
-  const possibleAcceleration = Math.pow(c / 40, 2)
-  const finAcceleration = Math.min(
-    possibleAcceleration,
-    maxSpeedPerSecond / (1000 / timeSinceLastTick)
-  )
-  const newX = Math.cos(tanAngle) * finAcceleration || 0
-  const newY = Math.sin(tanAngle) * finAcceleration || 0
+): Point => {
+  const centerMePos = {
+    x: view.width / 2,
+    y: view.height / 2,
+  }
+  const angle = getAngleBetweenPoints(centerMePos, mousePos)
+  const d = distance(mousePos, centerMePos)
+  const acceleration = Math.pow(d / ACCELERATION_SPEED_COEFFICIENT, 2)
+  const maxSpeedPerInterval = maxSpeedPerSecond / (1000 / timeSinceLastTick)
+  const elementAcceleration = Math.min(acceleration, maxSpeedPerInterval)
+  const newX = Math.cos(Angle.toRadians(angle)) * elementAcceleration
+  const newY = Math.sin(Angle.toRadians(angle)) * elementAcceleration
   return {
-    distanceX: Math.abs(newX),
-    distanceY: Math.abs(newY),
+    x: newX,
+    y: newY,
   }
 }
 
+const getCenterPointOfLine = (line: Line): Point => {
+  return {
+    x: line.x1 + (line.x2 - line.x1) / 2,
+    y: line.y1 + (line.y2 - line.y1) / 2,
+  }
+}
+const getVector = (line: Line): Point /*as vec*/ => {
+  return {
+    x: line.y2 - line.y1,
+    y: line.x2 - line.x1,
+  }
+}
+// const getNormalVector = (line: Line): Point /*as vec*/ => {
+//   return {
+//     x: line.y2 - line.y1,
+//     y: line.x2 - line.x1,
+//   }
+// }
+//
+//
 const stayInRange = (num: number, { min, max }: { min: number; max: number }) =>
   Math.min(Math.max(min, num), max)
 
-const addShaking = (cameraShakeIntensity: number, axisPosition: number) =>
-  cameraShakeIntensity > 0
-    ? axisPosition + Math.random() * cameraShakeIntensity - cameraShakeIntensity / 2
-    : axisPosition
-
+// todo: extract math to engine and logic to game
 export const calculateNewObjPos = (
-  mousePos: MousePos,
+  mousePos: Point,
   view: View,
   meElement: Circle & { maxSpeedPerSecond: number },
   timeSinceLastTick: number,
-  playground: Playground,
-  // todo: remove cameraShakeIntensity
-  { cameraShakeIntensity }: { cameraShakeIntensity: number }
+  playground: Playground
 ) => {
-  const { distanceX, distanceY } = getDistance(
+  // return neg or pos distance by positions of cursor
+  const { x: distanceX, y: distanceY } = getElShift(
     mousePos,
     view,
     meElement.maxSpeedPerSecond,
     timeSinceLastTick
   )
-  const x = calculateProgress(mousePos.x, meElement.x, view.width / 2, distanceX)
-  const y = calculateProgress(mousePos.y, meElement.y, view.height / 2, distanceY)
 
-  // todo: check playground collisions
+  // possible shifts
+  const x = meElement.x + distanceX
+  const y = meElement.y + distanceY
 
-  // console.log({ x, y })
-  // todo: make it move on the non blocking axis
-  // similar like: stayInRange for x and y axis
-  const isCollision = playground.walls
+  // calc polygon collisions
+  // calc polygon collisions
+  // calc polygon collisions
+  // calc polygon collisions
+  const polygonsCollisions = playground.walls
     // negation!!!!
     .map(wall => isPolygonCircleCollision({ x, y, radius: meElement.radius }, wall))
-    .flat()
-    // @ts-ignore
-    .some(c => c === true)
+    .map(wall => wall.filter(({ collisions }) => collisions.length > 0))
+    .filter(polCol => polCol.length > 0)
 
-  // console.log(isCollision)
+  // const allCollisionsPoints = polygonsCollisions.flat(2)
+  // console.log(allCollisionsPoints)
+  // .map(({ collisions }) => collisions)
+  // .flat()
+  // console.log(allCollisionsPoints)
+  // const nearestLineCol: any = []
 
-  if (isCollision) {
-    return meElement
+  // nearestLineCol.push(allCollisionsPoints[0])
+  // nearestLineCol.push(allCollisionsPoints[1])
+  /*
+  if (allCollisionsPoints.length > 0) {
+    // console.log(polygonsCollisions)
+    // console.log(allCollisionsPoints)
+    const pointsByDistance = allCollisionsPoints.map(point => ({
+      point,
+      distance: distance(meElement, point),
+    }))
+    // .sort((a, b) => a.distance - b.distance)
+    // console.log(pointsByDistance)
+    if (pointsByDistance.length >= 2) {
+      nearestLineCol.push(pointsByDistance[0].point)
+      nearestLineCol.push(pointsByDistance[1].point)
+    }
   }
-  // calculate new pos and stay in playground
+  */
+
+  const nearestLineCol = polygonsCollisions[0]?.[0]
+  const possibleMeCenter: Point[] = []
+  // const nearestPol = polygonsCollisions?.[0]
+  // const nearestLineCol = nearestPol?.[0]
+
+  if (nearestLineCol?.collisions?.length > 0) {
+    let nearestLineLine
+    if (nearestLineCol?.collisions.length === 1) {
+      // console.log('....nearestLineCol')
+      // console.log(nearestLineCol)
+      // return meElement
+      return { x, y }
+    } else {
+      nearestLineLine = {
+        x1: nearestLineCol.collisions[0].x,
+        y1: nearestLineCol.collisions[0].y,
+        // wtf am i doing?
+        x2: nearestLineCol?.collisions[1].x, //?? nearestLineCol[0].x,
+        y2: nearestLineCol?.collisions[1].y, //?? nearestLineCol[0].y,
+      }
+    }
+    const centerCollPoint = getCenterPointOfLine(nearestLineLine)
+
+    const radius = meElement.radius
+    const vec = getVector(nearestLineLine)
+
+    // no idea what I'm doing
+    const normalVec = {
+      x: -vec.y,
+      y: vec.x,
+    }
+    // am i just raped this function...?
+    const justAngle = getAngleBetweenPoints(
+      {
+        x: centerCollPoint.x + normalVec.x,
+        y: centerCollPoint.y + normalVec.y,
+      },
+      centerCollPoint
+    )
+
+    const meMoveX = Math.sin(Angle.toRadians(justAngle)) * radius
+    const meMoveY = Math.cos(Angle.toRadians(justAngle)) * radius
+    // console.log(justAngle)
+    // console.log(meMoveX)
+    // console.log(meMoveY)
+    // possibleMeCenter.push({
+    //   x: centerCollPoint.x - meMoveX,
+    //   y: centerCollPoint.y - meMoveY,
+    // }})
+    return {
+      x: centerCollPoint.x - meMoveX,
+      y: centerCollPoint.y - meMoveY,
+    }
+  }
+  // 2 points between circle and line
+
+  // // console.log(possibleMeCenter)
+  // if (possibleMeCenter.length > 0) {
+  //   const xAfterCol = Math.max(...possibleMeCenter.map(({ x }) => x)) // nearest x
+  //   const yAfterCol = Math.max(...possibleMeCenter.map(({ y }) => x)) // nearest x
+  //   return {
+  //     x: possibleMeCenter[0].x,
+  //     y: possibleMeCenter[0].y,
+  //   }
+  //   return {
+  //     x: xAfterCol,
+  //     y: yAfterCol,
+  //   }
+  // }
+  // const yAfterCol = // nearest y
+
   const xWithBorder = stayInRange(x, { min: 0, max: playground.width })
   const yWithBorder = stayInRange(y, { min: 0, max: playground.height })
+
   return {
-    x: addShaking(cameraShakeIntensity, xWithBorder),
-    y: addShaking(cameraShakeIntensity, yWithBorder),
+    // only first quadrant i guess
+    x: xWithBorder,
+    y: yWithBorder,
   }
 }
+;(() =>
+  setTimeout(() => {
+    calculateNewObjPos(
+      // mousePos:
+      { x: 100, y: 0 },
+      // view:
+      {
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 100,
+      },
+      {
+        x: 55, // center of screen
+        y: 55, // center of screen
+        radius: 5,
+        maxSpeedPerSecond: 10,
+      },
+      1000,
+      {
+        ...playground,
+        walls: [
+          // ...playground.walls,
+
+          createGameBorderElement({
+            background: 'red',
+            // TODO: draw playground in some external program
+            points: [
+              // triangle
+              { x: 60, y: 54 },
+              { x: 60, y: 66 },
+              { x: 65, y: 65 },
+            ],
+          }),
+        ],
+      }
+    )
+  }, 100))()
 
 /**
  * if array has length 0 => reduce return init value (so it returns undefined as we expect)
@@ -217,6 +403,8 @@ const isInAxis = (axisPosition: number, larger: number, lower: number, halfWidth
  *
  * this function check if `num` is inside of that range
  * if not -> move it to max/min value
+ *
+ * TODO: refactor name to: moveToRange?
  */
 export const getInRange = (num: number, range = 1) => stayInRange(num, { min: -range, max: range })
 
@@ -266,11 +454,11 @@ export const isInView = (view: View, gameElement: GameElement): boolean => {
     }
   }
 
-  const rightX = view.leftX + view.width
-  const bottomY = view.topY + view.height
+  const rightX = view.x + view.width
+  const bottomY = view.y + view.height
 
-  const isInX = isInAxis(x, view.leftX, rightX, width)
-  const isInY = isInAxis(y, view.topY, bottomY, height)
+  const isInX = isInAxis(x, view.x, rightX, width)
+  const isInY = isInAxis(y, view.y, bottomY, height)
 
   return isInX && isInY
 }
@@ -280,8 +468,8 @@ export const isInView = (view: View, gameElement: GameElement): boolean => {
  * to screen view relative coordinations
  */
 export const getRelativePosByAbsPos = (view: View, { x, y }: Coord): Coord => {
-  const relativeXCoord = x - view.leftX
-  const relativeYCoord = y - view.topY
+  const relativeXCoord = x - view.x
+  const relativeYCoord = y - view.y
   return {
     x: relativeXCoord,
     y: relativeYCoord,
