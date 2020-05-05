@@ -51,8 +51,8 @@ export const playground = {
       // TODO: draw playground in some external program
       points: [
         // triangle
-        { x: 0, y: 500 },
-        { x: 0, y: 400 },
+        { x: 150, y: 600 },
+        { x: 150, y: 500 },
         { x: 520, y: 200 },
         { x: 520, y: 444 },
       ],

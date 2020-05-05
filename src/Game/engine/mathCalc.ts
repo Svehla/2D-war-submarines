@@ -1,7 +1,7 @@
 import { Circle, GameElement, GameElementType, Line, Point, Rectangle } from '../gameElementTypes'
 import { Playground, RADAR_LOOP_SPEED, playground } from '../gameSetup'
+import { collideLineCircle, isPolygonCircleCollision } from './rayCasting'
 import { createGameBorderElement } from '../createGameElements'
-import { isPolygonCircleCollision } from './rayCasting'
 
 // todo: extract types out of `mathCalc.js` to another file
 // todo: extends Rectangle which extends Point
@@ -192,10 +192,27 @@ const getCenterPointOfLine = (line: Line): Point => {
     y: line.y1 + (line.y2 - line.y1) / 2,
   }
 }
+// broken!!!!!!!!!!!!
+// broken!!!!!!!!!!!!
+// broken!!!!!!!!!!!!
 const getVector = (line: Line): Point /*as vec*/ => {
   return {
-    x: line.y2 - line.y1,
-    y: line.x2 - line.x1,
+    y: line.y2 - line.y1,
+    x: line.x2 - line.x1,
+  }
+}
+const getLineVector = (line: Line): Point /*as vec*/ => {
+  return {
+    y: line.y2 - line.y1,
+    x: line.x2 - line.x1,
+  }
+}
+// between 0 and 1
+const normalizeVec = (vector: { x: number; y: number }) => {
+  const c = pythagorC(vector.x, vector.y)
+  return {
+    x: vector.x / c,
+    y: vector.y / c,
   }
 }
 // const getNormalVector = (line: Line): Point /*as vec*/ => {
@@ -224,7 +241,7 @@ export const calculateNewObjPos = (
     meElement.maxSpeedPerSecond,
     timeSinceLastTick
   )
-
+  //
   // possible shifts
   const x = meElement.x + distanceX
   const y = meElement.y + distanceY
@@ -265,6 +282,7 @@ export const calculateNewObjPos = (
   }
   */
 
+  // i support only one polygon :| :(
   const nearestLineCol = polygonsCollisions[0]?.[0]
   const possibleMeCenter: Point[] = []
   // const nearestPol = polygonsCollisions?.[0]
@@ -272,31 +290,75 @@ export const calculateNewObjPos = (
 
   if (nearestLineCol?.collisions?.length > 0) {
     let nearestLineLine
+    let centerCollPoint
+    // sometimes it jumps coz there is collison for only one line (not multi or polygons :|)
     if (nearestLineCol?.collisions.length === 1) {
-      // console.log('....nearestLineCol')
-      // console.log(nearestLineCol)
-      // return meElement
-      return { x, y }
+      console.log('....nearestLineCol')
+      const collPoint = nearestLineCol.collisions[0]
+      const an = getAngleBetweenPoints(collPoint, { x, y })
+      const vec = getLineVector({
+        x1: collPoint.x,
+        y1: collPoint.y,
+        x2: x,
+        y2: y,
+      })
+      const normVec = normalizeVec(vec)
+      console.log(collPoint, { x, y })
+      console.log(an)
+      console.log(vec)
+      return {
+        x: collPoint.x + normVec.x * meElement.radius,
+        y: collPoint.y + normVec.y * meElement.radius,
+      }
+      /////
+      nearestLineLine = nearestLineCol.line
+
+      const normalizedVec = normalizeVec(getLineVector(nearestLineCol.line))
+      const largerVec = {
+        x: normalizedVec.x * meElement.radius * 2,
+        y: normalizedVec.y * meElement.radius * 2,
+      }
+
+      const largerLine = {
+        // make line longer
+        x1: nearestLineCol.line.x1,
+        y1: nearestLineCol.line.y1,
+        x2: nearestLineCol.line.x2 + largerVec.x,
+        y2: nearestLineCol.line.y2 + largerVec.y,
+      }
+
+      const newCollisions = collideLineCircle(largerLine, { x, y, radius: meElement.radius })
+      if (newCollisions.length < 2) {
+        // error case
+        return { x, y }
+      }
+      centerCollPoint = getCenterPointOfLine({
+        x1: newCollisions[0].x,
+        y1: newCollisions[0].y,
+        x2: newCollisions[1].x,
+        y2: newCollisions[1].y,
+      })
+
+      // return { x, y }
     } else {
-      nearestLineLine = {
+      nearestLineLine = nearestLineCol.line
+      const nearestLineLineCent = {
         x1: nearestLineCol.collisions[0].x,
         y1: nearestLineCol.collisions[0].y,
         // wtf am i doing?
-        x2: nearestLineCol?.collisions[1].x, //?? nearestLineCol[0].x,
-        y2: nearestLineCol?.collisions[1].y, //?? nearestLineCol[0].y,
+        x2: nearestLineCol?.collisions[1].x,
+        y2: nearestLineCol?.collisions[1].y,
       }
+      centerCollPoint = getCenterPointOfLine(nearestLineLineCent)
     }
-    const centerCollPoint = getCenterPointOfLine(nearestLineLine)
-
     const radius = meElement.radius
     const vec = getVector(nearestLineLine)
 
-    // no idea what I'm doing
     const normalVec = {
-      x: -vec.y,
-      y: vec.x,
+      x: -vec.x,
+      y: vec.y,
     }
-    // am i just raped this function...?
+    // am i just raped this function for vector instead of point!!!!...?
     const justAngle = getAngleBetweenPoints(
       {
         x: centerCollPoint.x + normalVec.x,
@@ -305,15 +367,10 @@ export const calculateNewObjPos = (
       centerCollPoint
     )
 
+    // add fn for angle to vector
     const meMoveX = Math.sin(Angle.toRadians(justAngle)) * radius
     const meMoveY = Math.cos(Angle.toRadians(justAngle)) * radius
-    // console.log(justAngle)
-    // console.log(meMoveX)
-    // console.log(meMoveY)
-    // possibleMeCenter.push({
-    //   x: centerCollPoint.x - meMoveX,
-    //   y: centerCollPoint.y - meMoveY,
-    // }})
+
     return {
       x: centerCollPoint.x - meMoveX,
       y: centerCollPoint.y - meMoveY,

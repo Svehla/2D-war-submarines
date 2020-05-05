@@ -86,7 +86,7 @@ const collidePointCircle = (x: number, y: number, cx: number, cy: number, d: num
 // }
 
 // https://stackoverflow.com/a/37225895/8995887
-const collideLineCircle = (line: Line, circle: Circle) => {
+export const collideLineCircle = (line: Line, circle: Circle) => {
   let a: any
   let b: any
   let c: any
