@@ -1,19 +1,18 @@
 import { Circle, GameElementFood, Line, Point, Radar } from '../gameElementTypes'
 import { View } from '../engine/mathCalc'
 import { playground } from '../gameSetup'
-import borderGrid from './borderGrid'
-import meView from './me'
-import mousePosCircle from './mousePosCircle'
+import borderGrid from './borderGridView'
+import meView from './meView'
+import mousePosCircle from './mousePosCircleView'
 import radarView from './radarView'
-import rayCast from './rayCast'
-import renderGameElement from './gameElement'
-import wallView from './wall'
+import rayCast from './rayCastView'
+import renderGameElement from './gameElementView'
+import wall from './wallView'
 
 type Props = {
   view: View
   gameElements: GameElementFood[]
   me: Circle & { playground: string }
-  handlePlaygroundMove: (e: any) => void
   radar: Radar
   mousePos: Point
   rayCastRays: Line[]
@@ -24,10 +23,8 @@ const playgroundGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
   const { view, gameElements, me, radar, mousePos, rayCastRays, playground } = props
 
   // clear screen
-  // playground or canvas ref
   ctx.clearRect(0, 0, playground.width, playground.height)
 
-  // have to be first to render coz of translations
   borderGrid(ctx, {
     view: view,
     isDark: false,
@@ -40,7 +37,7 @@ const playgroundGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
 
   playground.walls.forEach(
     // @ts-ignore
-    wall => wall.visibleInView && wallView(ctx, { view, ...wall })
+    wallEl => wallEl.visibleInView && wall(ctx, { collisionSize: me.radius, view, wall: wallEl })
   )
 
   gameElements.forEach(

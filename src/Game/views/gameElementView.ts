@@ -26,13 +26,13 @@ const gameElement = (ctx: CanvasRenderingContext2D, props: Props) => {
       ctx.globalAlpha = 1
       break
     case GameElementType.Circle: {
-      // ctx.beginPath()
-      // ctx.arc(view.width / 2, view.height / 2, me.radius, 0, 2 * Math.PI)
-      // ctx.closePath()
-      // ctx.fillStyle = me.background
-      // ctx.fill()
-      // break
-      throw new Error('TODO: implement element rendering')
+      ctx.beginPath()
+      ctx.arc(view.width / 2, view.height / 2, element.radius, 0, 2 * Math.PI)
+      ctx.closePath()
+      ctx.fillStyle = element.background
+      ctx.fill()
+      break
+      // throw new Error('TODO: implement element rendering')
     }
   }
 }

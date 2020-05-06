@@ -1,58 +1,52 @@
 import { GameElementFood, GameElementType } from './gameElementTypes'
 import { createGameBorderElement, createGameFoodElements } from './createGameElements'
+
 import { isMobile } from '../utils'
 
 export const getView = () => ({
   width: window.innerWidth,
   height: window.innerHeight,
-  leftX: 100,
-  topY: 100,
+  x: 100,
+  y: 0,
 })
-
-const view = getView()
 
 export const RAY_COUNT = 50
 // export const RADAR_LOOP_SPEED = 15000
 // export const RADAR_LOOP_SPEED = 2000
-export const RADAR_LOOP_SPEED = 1500
+export const RADAR_LOOP_SPEED = 1000
 export const RADAR_VISIBLE_DELAY = RADAR_LOOP_SPEED / 2 // ms
 
-const helperX = view.leftX + view.width / 2
-const helperY = view.topY + view.height / 2
-
 export const playground = {
-  width: isMobile ? 5500 : 5500,
-  height: isMobile ? 2500 : 5000,
+  width: isMobile ? 2500 : 2000,
+  height: isMobile ? 2500 : 2000,
   // todo: rename it to: walls
   walls: [
+    createGameBorderElement({
+      background: 'green',
+      points: [
+        { x: 250, y: 600 },
+        { x: 220, y: 500 },
+        { x: 420, y: 544 },
+        { x: 150, y: 700 },
+      ],
+    }),
+    createGameBorderElement({
+      background: 'blue',
+      points: [
+        { x: 150, y: 400 },
+        { x: 520, y: 200 },
+        { x: 520, y: 444 },
+        { x: 150, y: 600 },
+      ],
+    }),
     createGameBorderElement({
       background: 'red',
       // TODO: draw playground in some external program
       points: [
-        {
-          x: helperX + 200,
-          y: helperY - 100,
-        },
-        {
-          x: helperX + 300,
-          y: helperY,
-        },
-        {
-          x: helperX + 350,
-          y: helperY + 240,
-        },
-        {
-          x: helperX + 100,
-          y: helperY + 200,
-        },
-        {
-          x: helperX,
-          y: helperY + 150,
-        },
-        {
-          x: helperX + 250,
-          y: helperY + 100,
-        },
+        // triangle
+        { x: 200, y: 500 },
+        { x: 400, y: 700 },
+        { x: 300, y: 900 },
       ],
     }),
   ],
@@ -61,10 +55,10 @@ export const playground = {
 export type Playground = typeof playground
 
 export const gameElements: GameElementFood[] = [
-  ...createGameFoodElements(100, GameElementType.Rectangle, {
+  ...createGameFoodElements(50, GameElementType.Rectangle, {
     audio: 'scream',
   }),
-  ...createGameFoodElements(100, GameElementType.Rectangle, {
+  ...createGameFoodElements(50, GameElementType.Circle, {
     audio: 'growl',
   }),
 ]

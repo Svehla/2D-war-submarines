@@ -1,10 +1,20 @@
 // the simplest geometry shapes
 // todo: extract functions into engine folder
 // primarily used for engine calculations
+// just math stuffs
+// refactor file system
 // ---------------------------------------------------------------
+export type ArcCol = {
+  x: number
+  y: number
+  startAngle: number
+  endAngle: number
+  radius: number
+}
 export type Arc = {
   x: number
   y: number
+  // TODO: refactor to endAngle
   sectorAngle: number
   startAngle: number
   radius: number
@@ -48,6 +58,7 @@ export type BorderElement = {}
 // ---------------------------------------------------------------
 // similar to arc but customized for the current game
 export type Radar = {
+  // TODO: refactor to endAngle
   sectorAngle: number
   rotation: number
   radius: number
@@ -55,10 +66,17 @@ export type Radar = {
 }
 
 export enum GameElementType {
+  Arc = 'Arc',
   Rectangle = 'Rectangle',
   Circle = 'Circle',
   Polygon = 'Polygon',
 }
+
+// what about class instances?
+// used for game Collisions
+export type GameCollisionsElement =
+  | (ArcCol & { type: GameElementType.Arc })
+  | (Polygon & { type: GameElementType.Polygon; baseLine: Line })
 
 // shared between food and borders
 export type GameElementProps = {

@@ -1,17 +1,12 @@
 import './engine/rayCasting'
 import { GameElement, GameElementType, Line, Radar } from './gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
-import {
-  View,
-  calcNewRadarRotation,
-  calculateNewObjPos,
-  decreaseBy1ToZero,
-  isInView,
-} from './engine/mathCalc'
+import { View, calcNewRadarRotation, isInView } from './engine/mathCalc'
+import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'
 import { isMobile } from '../utils'
-import { /*isArcRectCollision,*/ isTwoElementCollision } from './engine/collisions'
-import playgroundGrid from './views/playground'
+import { isTwoGameElementCollision } from './engine/collisions'
+import playgroundGrid from './views/playgroundView'
 
 // kinda shitty code
 const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
@@ -38,15 +33,15 @@ class GameRoot {
     const view = getView()
     return {
       me: {
-        x: view.leftX + view.width / 2,
-        y: view.topY + view.height / 2,
+        x: 100 as number,
+        y: 100 as number,
         // constants => sign it somehow like final const
         type: GameElementType.Circle as GameElementType,
+        // radius: 5,
         radius: isMobile ? 60 : 60,
         background: '#559',
         maxSpeedPerSecond: isMobile ? 125 : 250,
       } as const,
-      cameraShakeIntensity: 0,
       playground,
       view: getView(),
       gameElements,
@@ -69,14 +64,7 @@ class GameRoot {
   }
 
   /**
-   * it's like React.ref
-   *
-   * don't want to rerender react app (aka change state)
-   * while i catch event for mouse is moved -> i will wait till game loop will check it by itself
-   *
    * i don't care about immutability
-   *
-   * I use this.state for triggering of render method -> its triggered by `requestAnimationFrame`
    */
   _gameState: ReturnType<typeof GameRoot.getGameState>
   _highResTimestamp = 0
@@ -109,12 +97,13 @@ class GameRoot {
   // and react event handling
   // --------------------------
 
-  public handleResize = (e: any) => {
+  public handleResize = () => {
     this._gameState.view.width = window.innerWidth
     this._gameState.view.height = window.innerHeight
     this._canvasRef.width = this._gameState.view.width
     this._canvasRef.height = this._gameState.view.height
   }
+
   // use for desktop support
   public handleMouseMove = (e: MouseEvent) => {
     const x = e.pageX
@@ -163,10 +152,7 @@ class GameRoot {
       this._gameState.view,
       this._gameState.me,
       timeSinceLastTick,
-      this._gameState.playground,
-      {
-        cameraShakeIntensity: this._gameState.cameraShakeIntensity,
-      }
+      this._gameState.playground
     )
 
     // update static tick stuffs (radar & view & my position)
@@ -175,8 +161,8 @@ class GameRoot {
       me: { ...this._gameState.me, x, y },
       view: {
         ...this._gameState.view,
-        leftX: x - this._gameState.view.width / 2,
-        topY: y - this._gameState.view.height / 2,
+        x: x - this._gameState.view.width / 2,
+        y: y - this._gameState.view.height / 2,
       },
     }
 
@@ -192,31 +178,22 @@ class GameRoot {
     const updatedGameElements = this._gameState.gameElements
       // add max speed threshold around the view
       .map(item => addViewProperty(item, this._gameState.view))
-      // todo: outdated value of radar (one frame out -> change order of setting values)
-      // todo: does it make sense for implemented rayCasting?
-      // .map(item => addArcViewProperty(this._gameState.radar, me, item as any))
       .map(item => {
-        // @ts-ignore
         if (item.deleted) {
           return item
         }
         if (!item.visibleInView) {
           return item
         }
-        // is not in collision -> just return and ignore next code..
-        // @ts-ignore
-        if (!isTwoElementCollision(this._gameState.me, item)) {
-          return item
+        if (isTwoGameElementCollision(this._gameState.me, item)) {
+          return { ...item, deleted: true }
         }
-        return { ...item, deleted: true }
+        return item
       })
-
     this._gameState.gameElements = updatedGameElements.map(item => ({
       ...item,
       seenByRadar: item.seenByRadar > 0 ? item.seenByRadar - timeSinceLastTick : 0,
     }))
-
-    this._gameState.cameraShakeIntensity = decreaseBy1ToZero(this._gameState.cameraShakeIntensity)
 
     const visibleGameElements = this._gameState.gameElements.filter(
       e => e.visibleInView && !e.deleted

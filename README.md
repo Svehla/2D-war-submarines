@@ -25,6 +25,12 @@ npm install
 npm run start
 ```
 
+### game design studio
+
+now there is POC for game design studio via ascii art... we will see progress in the future
+
+![game design](/docs/game-design-preview.png)
+
 ### build
 
 ```bash

@@ -13,5 +13,7 @@ export const isMobile = (function (a) {
 // eslint-disable-next-line no-bitwise
 export const randomColor = () => '#' + ((((1 << 24) * Math.random()) / 8) | 0).toString(16)
 
+// ts alternative for .filter(Boolean) with correct type inheritance
 // https://github.com/microsoft/TypeScript/issues/20707#issuecomment-351874491
-export const notNullable = <T>(x: T | null | undefined): x is T => x !== undefined && x !== null
+export const notNullable = <T>(x: T | null | undefined | false): x is T =>
+  x !== undefined && x !== null && x !== false
