@@ -1,7 +1,19 @@
-import { Circle, GameElement, GameElementType, Line, Point, Rectangle } from '../gameElementTypes'
+import './line'
+import {
+  Circle,
+  GameCollisionsEl,
+  GameElement,
+  GameElementType,
+  Line,
+  Point,
+  Rectangle,
+} from '../gameElementTypes'
 import { Playground, RADAR_LOOP_SPEED, playground } from '../gameSetup'
-import { collideLineCircle, isPolygonCircleCollision } from './rayCasting'
+import { angleToUnitVec, getLineVec, getNormalVec, shiftPoint, toUnitVec } from './vec'
 import { createGameBorderElement } from '../createGameElements'
+// import { distToSegment } from './rayCasting'
+import { getElementCollisionsElements } from './collisionsHelper'
+import { isPointArcCollision, isPointPolygonCollision } from './collisions'
 
 // todo: extract types out of `mathCalc.js` to another file
 // todo: extends Rectangle which extends Point
@@ -138,7 +150,7 @@ export const distance = (a: Point, b: Point) => {
  *
  * first point is the centered one (not now...lol)
  */
-const getAngleBetweenPoints = (angleFromP: Point, angleToP: Point) => {
+export const getAngleBetweenPoints = (angleFromP: Point, angleToP: Point) => {
   // relative coords
   const xDiff = angleToP.x - angleFromP.x
   const yDiff = angleToP.y - angleFromP.y
@@ -160,7 +172,6 @@ const getAngleBetweenPoints = (angleFromP: Point, angleToP: Point) => {
   }
   return arcRecAngle
 }
-console.log(getAngleBetweenPoints({ x: 10, y: 10 }, { x: 20, y: 15 }))
 
 const ACCELERATION_SPEED_COEFFICIENT = 40
 export const getElShift = (
@@ -186,43 +197,21 @@ export const getElShift = (
   }
 }
 
-const getCenterPointOfLine = (line: Line): Point => {
-  return {
-    x: line.x1 + (line.x2 - line.x1) / 2,
-    y: line.y1 + (line.y2 - line.y1) / 2,
-  }
+// inspiration
+// https://gist.github.com/mattdesl/47412d930dcd8cd765c871a65532ffac
+const distToSegment = (point: Point, line: Line) => {
+  const dx = line.x2 - line.x1
+  const dy = line.y2 - line.y1
+  const l2 = dx * dx + dy * dy
+
+  if (l2 === 0) return distance(point, { x: line.x1, y: line.y1 })
+
+  let t = ((point.x - line.x1) * dx + (point.y - line.y1) * dy) / l2
+  t = Math.max(0, Math.min(1, t))
+
+  return distance(point, { x: line.x1 + t * dx, y: line.y1 + t * dy })
 }
-// broken!!!!!!!!!!!!
-// broken!!!!!!!!!!!!
-// broken!!!!!!!!!!!!
-const getVector = (line: Line): Point /*as vec*/ => {
-  return {
-    y: line.y2 - line.y1,
-    x: line.x2 - line.x1,
-  }
-}
-const getLineVector = (line: Line): Point /*as vec*/ => {
-  return {
-    y: line.y2 - line.y1,
-    x: line.x2 - line.x1,
-  }
-}
-// between 0 and 1
-const normalizeVec = (vector: { x: number; y: number }) => {
-  const c = pythagorC(vector.x, vector.y)
-  return {
-    x: vector.x / c,
-    y: vector.y / c,
-  }
-}
-// const getNormalVector = (line: Line): Point /*as vec*/ => {
-//   return {
-//     x: line.y2 - line.y1,
-//     y: line.x2 - line.x1,
-//   }
-// }
-//
-//
+
 const stayInRange = (num: number, { min, max }: { min: number; max: number }) =>
   Math.min(Math.max(min, num), max)
 
@@ -233,7 +222,7 @@ export const calculateNewObjPos = (
   meElement: Circle & { maxSpeedPerSecond: number },
   timeSinceLastTick: number,
   playground: Playground
-) => {
+): Point => {
   // return neg or pos distance by positions of cursor
   const { x: distanceX, y: distanceY } = getElShift(
     mousePos,
@@ -246,200 +235,89 @@ export const calculateNewObjPos = (
   const x = meElement.x + distanceX
   const y = meElement.y + distanceY
 
-  // calc polygon collisions
-  // calc polygon collisions
-  // calc polygon collisions
-  // calc polygon collisions
-  const polygonsCollisions = playground.walls
-    // negation!!!!
-    .map(wall => isPolygonCircleCollision({ x, y, radius: meElement.radius }, wall))
-    .map(wall => wall.filter(({ collisions }) => collisions.length > 0))
-    .filter(polCol => polCol.length > 0)
+  // walls (poly) collisions
+  const collisionElements = playground.walls.map(wall =>
+    getElementCollisionsElements(wall, meElement.radius)
+  )
 
-  // const allCollisionsPoints = polygonsCollisions.flat(2)
-  // console.log(allCollisionsPoints)
-  // .map(({ collisions }) => collisions)
-  // .flat()
-  // console.log(allCollisionsPoints)
-  // const nearestLineCol: any = []
-
-  // nearestLineCol.push(allCollisionsPoints[0])
-  // nearestLineCol.push(allCollisionsPoints[1])
-  /*
-  if (allCollisionsPoints.length > 0) {
-    // console.log(polygonsCollisions)
-    // console.log(allCollisionsPoints)
-    const pointsByDistance = allCollisionsPoints.map(point => ({
-      point,
-      distance: distance(meElement, point),
-    }))
-    // .sort((a, b) => a.distance - b.distance)
-    // console.log(pointsByDistance)
-    if (pointsByDistance.length >= 2) {
-      nearestLineCol.push(pointsByDistance[0].point)
-      nearestLineCol.push(pointsByDistance[1].point)
-    }
-  }
-  */
-
-  // i support only one polygon :| :(
-  const nearestLineCol = polygonsCollisions[0]?.[0]
-  const possibleMeCenter: Point[] = []
-  // const nearestPol = polygonsCollisions?.[0]
-  // const nearestLineCol = nearestPol?.[0]
-
-  if (nearestLineCol?.collisions?.length > 0) {
-    let nearestLineLine
-    let centerCollPoint
-    // sometimes it jumps coz there is collison for only one line (not multi or polygons :|)
-    if (nearestLineCol?.collisions.length === 1) {
-      console.log('....nearestLineCol')
-      const collPoint = nearestLineCol.collisions[0]
-      const an = getAngleBetweenPoints(collPoint, { x, y })
-      const vec = getLineVector({
-        x1: collPoint.x,
-        y1: collPoint.y,
-        x2: x,
-        y2: y,
-      })
-      const normVec = normalizeVec(vec)
-      console.log(collPoint, { x, y })
-      console.log(an)
-      console.log(vec)
-      return {
-        x: collPoint.x + normVec.x * meElement.radius,
-        y: collPoint.y + normVec.y * meElement.radius,
-      }
-      /////
-      nearestLineLine = nearestLineCol.line
-
-      const normalizedVec = normalizeVec(getLineVector(nearestLineCol.line))
-      const largerVec = {
-        x: normalizedVec.x * meElement.radius * 2,
-        y: normalizedVec.y * meElement.radius * 2,
-      }
-
-      const largerLine = {
-        // make line longer
-        x1: nearestLineCol.line.x1,
-        y1: nearestLineCol.line.y1,
-        x2: nearestLineCol.line.x2 + largerVec.x,
-        y2: nearestLineCol.line.y2 + largerVec.y,
-      }
-
-      const newCollisions = collideLineCircle(largerLine, { x, y, radius: meElement.radius })
-      if (newCollisions.length < 2) {
-        // error case
-        return { x, y }
-      }
-      centerCollPoint = getCenterPointOfLine({
-        x1: newCollisions[0].x,
-        y1: newCollisions[0].y,
-        x2: newCollisions[1].x,
-        y2: newCollisions[1].y,
-      })
-
-      // return { x, y }
-    } else {
-      nearestLineLine = nearestLineCol.line
-      const nearestLineLineCent = {
-        x1: nearestLineCol.collisions[0].x,
-        y1: nearestLineCol.collisions[0].y,
-        // wtf am i doing?
-        x2: nearestLineCol?.collisions[1].x,
-        y2: nearestLineCol?.collisions[1].y,
-      }
-      centerCollPoint = getCenterPointOfLine(nearestLineLineCent)
-    }
-    const radius = meElement.radius
-    const vec = getVector(nearestLineLine)
-
-    const normalVec = {
-      x: -vec.x,
-      y: vec.y,
-    }
-    // am i just raped this function for vector instead of point!!!!...?
-    const justAngle = getAngleBetweenPoints(
-      {
-        x: centerCollPoint.x + normalVec.x,
-        y: centerCollPoint.y + normalVec.y,
-      },
-      centerCollPoint
+  // check center me point collision for each border element
+  const isWallsCollisions = collisionElements
+    .map(wallCollElements =>
+      wallCollElements
+        .map(el => {
+          // return false or new el position -> should be calculated in the different place i guess
+          switch (el.type) {
+            case GameElementType.Arc:
+              // @ts-ignore
+              const isCol = isPointArcCollision(el, { x, y })
+              if (isCol) {
+                // move user to the edge of collision
+                const angleBetween = getAngleBetweenPoints(el, { x, y })
+                const dist = distance(el, { x, y })
+                const directionVec = angleToUnitVec(angleBetween)
+                return shiftPoint(
+                  { x, y },
+                  {
+                    x: directionVec.x * (meElement.radius - dist),
+                    y: directionVec.y * (meElement.radius - dist),
+                  }
+                )
+              }
+              return false
+            case GameElementType.Polygon: {
+              const isCol = isPointPolygonCollision(el, { x, y })
+              if (isCol) {
+                // const centerPoint = getCenterPointOfLine(el.baseLine)
+                const directionVec = toUnitVec(getNormalVec(getLineVec(el.baseLine)))
+                const dist = distToSegment({ x, y }, el.baseLine)
+                return shiftPoint(
+                  { x, y },
+                  {
+                    x: directionVec.x * (meElement.radius - dist),
+                    y: directionVec.y * (meElement.radius - dist),
+                  }
+                )
+              }
+              return false
+            }
+          }
+        })
+        .filter(Boolean)
     )
+    // remove empty collisions -> for cleaner data structure
+    .filter(col => col.length !== 0)
 
-    // add fn for angle to vector
-    const meMoveX = Math.sin(Angle.toRadians(justAngle)) * radius
-    const meMoveY = Math.cos(Angle.toRadians(justAngle)) * radius
-
-    return {
-      x: centerCollPoint.x - meMoveX,
-      y: centerCollPoint.y - meMoveY,
+  // cant handle multi advanced collisions with more elements
+  const colFlat = isWallsCollisions.flat(2)
+  if (colFlat.length > 1) {
+    return meElement
+  }
+  // console.log(isWallsCollisions)
+  // TODO: aggregate collisions and get shortest distance
+  for (const isWallCollisions of isWallsCollisions) {
+    for (const isWallCollision of isWallCollisions) {
+      if (isWallCollision) {
+        // console.log(isCollision)
+        return isWallCollision as Point
+      }
     }
   }
-  // 2 points between circle and line
 
-  // // console.log(possibleMeCenter)
-  // if (possibleMeCenter.length > 0) {
-  //   const xAfterCol = Math.max(...possibleMeCenter.map(({ x }) => x)) // nearest x
-  //   const yAfterCol = Math.max(...possibleMeCenter.map(({ y }) => x)) // nearest x
-  //   return {
-  //     x: possibleMeCenter[0].x,
-  //     y: possibleMeCenter[0].y,
-  //   }
-  //   return {
-  //     x: xAfterCol,
-  //     y: yAfterCol,
-  //   }
-  // }
-  // const yAfterCol = // nearest y
-
-  const xWithBorder = stayInRange(x, { min: 0, max: playground.width })
-  const yWithBorder = stayInRange(y, { min: 0, max: playground.height })
+  // what about borders???
+  const xWithBorder = stayInRange(x, {
+    min: meElement.radius,
+    max: playground.width - meElement.radius,
+  })
+  const yWithBorder = stayInRange(y, {
+    min: meElement.radius,
+    max: playground.height - meElement.radius,
+  })
 
   return {
-    // only first quadrant i guess
     x: xWithBorder,
     y: yWithBorder,
   }
 }
-;(() =>
-  setTimeout(() => {
-    calculateNewObjPos(
-      // mousePos:
-      { x: 100, y: 0 },
-      // view:
-      {
-        x: 10,
-        y: 10,
-        width: 100,
-        height: 100,
-      },
-      {
-        x: 55, // center of screen
-        y: 55, // center of screen
-        radius: 5,
-        maxSpeedPerSecond: 10,
-      },
-      1000,
-      {
-        ...playground,
-        walls: [
-          // ...playground.walls,
-
-          createGameBorderElement({
-            background: 'red',
-            // TODO: draw playground in some external program
-            points: [
-              // triangle
-              { x: 60, y: 54 },
-              { x: 60, y: 66 },
-              { x: 65, y: 65 },
-            ],
-          }),
-        ],
-      }
-    )
-  }, 100))()
 
 /**
  * if array has length 0 => reduce return init value (so it returns undefined as we expect)

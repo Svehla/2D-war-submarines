@@ -1,5 +1,4 @@
-import { GameElementType } from '../gameElementTypes'
-import { _isPointArcCollision } from './collisions'
+import { isPointArcCollision } from './collisions'
 
 describe('arc collisions', () => {
   const arc = {
@@ -11,14 +10,14 @@ describe('arc collisions', () => {
   }
   it('collision with point', () => {
     expect(
-      _isPointArcCollision(arc, {
+      isPointArcCollision(arc, {
         x: 11,
         y: 11,
       })
     ).toEqual(true)
 
     expect(
-      _isPointArcCollision(arc, {
+      isPointArcCollision(arc, {
         x: -9,
         y: -5,
       })

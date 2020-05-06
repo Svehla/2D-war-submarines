@@ -1,16 +1,10 @@
 import './engine/rayCasting'
 import { GameElement, GameElementType, Line, Radar } from './gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
-import {
-  View,
-  calcNewRadarRotation,
-  calculateNewObjPos,
-  decreaseBy1ToZero,
-  isInView,
-} from './engine/mathCalc'
+import { View, calcNewRadarRotation, calculateNewObjPos, isInView } from './engine/mathCalc'
 import { getRayCastCollisions } from './engine/rayCasting'
 import { isMobile } from '../utils'
-import { /*isArcRectCollision,*/ isTwoElementCollision } from './engine/collisions'
+import { isTwoElementCollision } from './engine/collisions'
 import playgroundGrid from './views/playground'
 
 // kinda shitty code

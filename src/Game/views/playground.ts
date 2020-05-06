@@ -7,7 +7,7 @@ import mousePosCircle from './mousePosCircle'
 import radarView from './radarView'
 import rayCast from './rayCast'
 import renderGameElement from './gameElement'
-import wallView from './wall'
+import wall from './wall'
 
 type Props = {
   view: View
@@ -40,7 +40,7 @@ const playgroundGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
 
   playground.walls.forEach(
     // @ts-ignore
-    wall => wall.visibleInView && wallView(ctx, { view, ...wall })
+    wallEl => wallEl.visibleInView && wall(ctx, { collisionSize: me.radius, view, wall: wallEl })
   )
 
   gameElements.forEach(

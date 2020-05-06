@@ -1,23 +1,30 @@
-import { Point } from '../gameElementTypes'
+import { Polygon } from '../gameElementTypes'
 import { View, getRelativePosByAbsPos } from '../engine/mathCalc'
+import wallCollisions from './wallCollisions'
 
 type Props = {
+  collisionSize: number
   view: View
-  background: string
-  points: Point[]
+  wall: { background: string } & Polygon
 }
 
-const wall = (ctx: CanvasRenderingContext2D, { view, points, background }: Props) => {
-  const linePoints = points.map(point => getRelativePosByAbsPos(view, point))
+const SHOW_WALL_COLLISIONS = true
+const wall = (ctx: CanvasRenderingContext2D, { collisionSize, view, wall }: Props) => {
+  const points = wall.points
+  const relativePoints = points.map(point => getRelativePosByAbsPos(view, point))
+
+  if (SHOW_WALL_COLLISIONS) {
+    wallCollisions(ctx, { polygon: wall, view, collisionRadius: collisionSize })
+  }
 
   ctx.beginPath()
-
-  linePoints.forEach(point => {
+  relativePoints.forEach(point => {
     ctx.lineTo(point.x, point.y)
   })
   ctx.closePath()
-  ctx.fillStyle = background
+  ctx.fillStyle = wall.background
   ctx.fill()
+  ctx.closePath()
 }
 
 export default wall
