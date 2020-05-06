@@ -8,7 +8,7 @@ type Props = {
   collisionRadius: number
 }
 
-const wallCollisions = (ctx: CanvasRenderingContext2D, props: Props) => {
+const wallCollision = (ctx: CanvasRenderingContext2D, props: Props) => {
   const { view, collisionRadius, polygon } = props
   const points = polygon.points
   const relativePoints = points.map(point => getRelativePosByAbsPos(view, point))
@@ -44,4 +44,4 @@ const wallCollisions = (ctx: CanvasRenderingContext2D, props: Props) => {
   })
 }
 
-export default wallCollisions
+export default wallCollision

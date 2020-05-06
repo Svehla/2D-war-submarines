@@ -64,8 +64,8 @@ export const isPointArcCollision = (arc: Arc, rect: Point) => {
   // const endAngle = Angle.add(arc.startAngle, arc.sectorAngle)
   return isAngleInArcSector(arcRecAngle, startAngle, endAngle) && distance(arc, rect) < arc.radius
 }
-/// it works only for game eatable elements
-export const isTwoElementCollision = (circleShape1: Circle, shape2: GameElement) => {
+
+export const isTwoGameElementCollision = (circleShape1: Circle, shape2: GameElement) => {
   switch (shape2.type) {
     case GameElementType.Circle:
       return isCircleCircleCollision(circleShape1, shape2)

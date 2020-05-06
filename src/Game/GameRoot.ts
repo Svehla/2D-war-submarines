@@ -4,8 +4,8 @@ import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSe
 import { View, calcNewRadarRotation, calculateNewObjPos, isInView } from './engine/mathCalc'
 import { getRayCastCollisions } from './engine/rayCasting'
 import { isMobile } from '../utils'
-import { isTwoElementCollision } from './engine/collisions'
-import playgroundGrid from './views/playground'
+import { isTwoGameElementCollision } from './engine/collisions'
+import playgroundGrid from './views/playgroundView'
 
 // kinda shitty code
 const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
@@ -32,8 +32,8 @@ class GameRoot {
     const view = getView()
     return {
       me: {
-        x: view.x + view.width / 2,
-        y: view.y + view.height / 2,
+        x: 100 as number,
+        y: 100 as number,
         // constants => sign it somehow like final const
         type: GameElementType.Circle as GameElementType,
         // radius: 5,
@@ -63,14 +63,7 @@ class GameRoot {
   }
 
   /**
-   * it's like React.ref
-   *
-   * don't want to rerender react app (aka change state)
-   * while i catch event for mouse is moved -> i will wait till game loop will check it by itself
-   *
    * i don't care about immutability
-   *
-   * I use this.state for triggering of render method -> its triggered by `requestAnimationFrame`
    */
   _gameState: ReturnType<typeof GameRoot.getGameState>
   _highResTimestamp = 0
@@ -103,12 +96,13 @@ class GameRoot {
   // and react event handling
   // --------------------------
 
-  public handleResize = (e: any) => {
+  public handleResize = () => {
     this._gameState.view.width = window.innerWidth
     this._gameState.view.height = window.innerHeight
     this._canvasRef.width = this._gameState.view.width
     this._canvasRef.height = this._gameState.view.height
   }
+
   // use for desktop support
   public handleMouseMove = (e: MouseEvent) => {
     const x = e.pageX
@@ -139,9 +133,7 @@ class GameRoot {
     this._highResTimestamp = highResTimestamp
     this._recalculateGameLoopState(timeSinceLastTick)
     this._draw()
-    // setTimeout(() => {
     this.frameId = requestAnimationFrame(this._tick)
-    // }, 200)
   }
 
   /**
@@ -185,25 +177,18 @@ class GameRoot {
     const updatedGameElements = this._gameState.gameElements
       // add max speed threshold around the view
       .map(item => addViewProperty(item, this._gameState.view))
-      // todo: outdated value of radar (one frame out -> change order of setting values)
-      // todo: does it make sense for implemented rayCasting?
-      // .map(item => addArcViewProperty(this._gameState.radar, me, item as any))
       .map(item => {
-        // @ts-ignore
         if (item.deleted) {
           return item
         }
         if (!item.visibleInView) {
           return item
         }
-        // is not in collision -> just return and ignore next code..
-        // @ts-ignore
-        if (!isTwoElementCollision(this._gameState.me, item)) {
-          return item
+        if (isTwoGameElementCollision(this._gameState.me, item)) {
+          return { ...item, deleted: true }
         }
-        return { ...item, deleted: true }
+        return item
       })
-
     this._gameState.gameElements = updatedGameElements.map(item => ({
       ...item,
       seenByRadar: item.seenByRadar > 0 ? item.seenByRadar - timeSinceLastTick : 0,

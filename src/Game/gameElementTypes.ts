@@ -13,7 +13,7 @@ export type ArcCol = {
 export type Arc = {
   x: number
   y: number
-  // refactor to endAngle
+  // TODO: refactor to endAngle
   sectorAngle: number
   startAngle: number
   radius: number
@@ -57,6 +57,7 @@ export type BorderElement = {}
 // ---------------------------------------------------------------
 // similar to arc but customized for the current game
 export type Radar = {
+  // TODO: refactor to endAngle
   sectorAngle: number
   rotation: number
   radius: number

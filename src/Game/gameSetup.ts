@@ -1,8 +1,7 @@
 import { GameElementFood, GameElementType } from './gameElementTypes'
 import { createGameBorderElement, createGameFoodElements } from './createGameElements'
-import { getLinesFromShape } from './helpers/mapGenerator'
+
 import { isMobile } from '../utils'
-import shape1 from './helpers/shape1'
 
 export const getView = () => ({
   width: window.innerWidth,
@@ -11,26 +10,15 @@ export const getView = () => ({
   y: 0,
 })
 
-const view = getView()
-
 export const RAY_COUNT = 50
-export const RADAR_LOOP_SPEED = 15000
+// export const RADAR_LOOP_SPEED = 15000
 // export const RADAR_LOOP_SPEED = 2000
-// export const RADAR_LOOP_SPEED = 1000
+export const RADAR_LOOP_SPEED = 1000
 export const RADAR_VISIBLE_DELAY = RADAR_LOOP_SPEED / 2 // ms
 
-// const helperX = view.x + view.width / 2
-// const helperY = view.y + view.height / 2
-
-const myPolygon = getLinesFromShape(shape1, {
-  x: 28,
-  y: 0,
-})
-
-// TODO: should playground extends Rectangle
 export const playground = {
-  width: isMobile ? 5500 : 5500,
-  height: isMobile ? 2500 : 5000,
+  width: isMobile ? 2500 : 2000,
+  height: isMobile ? 2500 : 2000,
   // todo: rename it to: walls
   walls: [
     createGameBorderElement({
@@ -67,10 +55,10 @@ export const playground = {
 export type Playground = typeof playground
 
 export const gameElements: GameElementFood[] = [
-  ...createGameFoodElements(100, GameElementType.Rectangle, {
+  ...createGameFoodElements(50, GameElementType.Rectangle, {
     audio: 'scream',
   }),
-  ...createGameFoodElements(100, GameElementType.Rectangle, {
+  ...createGameFoodElements(50, GameElementType.Circle, {
     audio: 'growl',
   }),
 ]

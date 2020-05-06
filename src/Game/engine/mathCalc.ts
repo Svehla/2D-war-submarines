@@ -1,19 +1,11 @@
 import './line'
-import {
-  Circle,
-  GameCollisionsEl,
-  GameElement,
-  GameElementType,
-  Line,
-  Point,
-  Rectangle,
-} from '../gameElementTypes'
-import { Playground, RADAR_LOOP_SPEED, playground } from '../gameSetup'
+import { Circle, GameElement, GameElementType, Line, Point, Rectangle } from '../gameElementTypes'
+import { Playground, RADAR_LOOP_SPEED } from '../gameSetup'
 import { angleToUnitVec, getLineVec, getNormalVec, shiftPoint, toUnitVec } from './vec'
-import { createGameBorderElement } from '../createGameElements'
 // import { distToSegment } from './rayCasting'
 import { getElementCollisionsElements } from './collisionsHelper'
 import { isPointArcCollision, isPointPolygonCollision } from './collisions'
+import { notNullable } from '../../utils'
 
 // todo: extract types out of `mathCalc.js` to another file
 // todo: extends Rectangle which extends Point
@@ -240,6 +232,7 @@ export const calculateNewObjPos = (
     getElementCollisionsElements(wall, meElement.radius)
   )
 
+  // TODO: refactor this monster code
   // check center me point collision for each border element
   const isWallsCollisions = collisionElements
     .map(wallCollElements =>
@@ -247,7 +240,7 @@ export const calculateNewObjPos = (
         .map(el => {
           // return false or new el position -> should be calculated in the different place i guess
           switch (el.type) {
-            case GameElementType.Arc:
+            case GameElementType.Arc: {
               // @ts-ignore
               const isCol = isPointArcCollision(el, { x, y })
               if (isCol) {
@@ -263,7 +256,8 @@ export const calculateNewObjPos = (
                   }
                 )
               }
-              return false
+              break
+            }
             case GameElementType.Polygon: {
               const isCol = isPointPolygonCollision(el, { x, y })
               if (isCol) {
@@ -278,11 +272,12 @@ export const calculateNewObjPos = (
                   }
                 )
               }
-              return false
+              break
             }
           }
+          return false
         })
-        .filter(Boolean)
+        .filter(notNullable)
     )
     // remove empty collisions -> for cleaner data structure
     .filter(col => col.length !== 0)
@@ -292,14 +287,12 @@ export const calculateNewObjPos = (
   if (colFlat.length > 1) {
     return meElement
   }
-  // console.log(isWallsCollisions)
-  // TODO: aggregate collisions and get shortest distance
-  for (const isWallCollisions of isWallsCollisions) {
-    for (const isWallCollision of isWallCollisions) {
-      if (isWallCollision) {
-        // console.log(isCollision)
-        return isWallCollision as Point
-      }
+
+  // TODO: should aggregate collisions and get shortest distance?
+  for (const isWallCollision of colFlat) {
+    if (isWallCollision) {
+      // console.log(isCollision)
+      return isWallCollision as Point
     }
   }
 
