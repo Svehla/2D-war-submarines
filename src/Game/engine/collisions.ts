@@ -11,8 +11,6 @@ import {
   Rectangle,
 } from '../gameElementTypes'
 
-// TODO: add shifted for collisions move
-// this 2 functions are used for walls border collisions
 // https://github.com/bmoren/p5.collide2D/blob/master/p5.collide2d.js#L228
 export const isPointPolygonCollision = ({ points: vertices }: Polygon, point: Point): boolean => {
   const px = point.x

@@ -2,12 +2,10 @@ import { Line, Point } from '../gameElementTypes'
 import { Vec } from './vec'
 
 export const getPointsFromLines = (lines: Line[]): Point[] => {
-  return lines
-    .map(line => [
-      { x: line.x1, y: line.y1 },
-      { x: line.x2, y: line.y2 },
-    ])
-    .flat()
+  return lines.flatMap(line => [
+    { x: line.x1, y: line.y1 },
+    { x: line.x2, y: line.y2 },
+  ])
 }
 
 export const getLinesFromPoints = (points: Point[]): Line[] => {

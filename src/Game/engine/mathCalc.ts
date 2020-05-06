@@ -6,6 +6,7 @@ import { angleToUnitVec, getLineVec, getNormalVec, shiftPoint, toUnitVec } from 
 import { getElementCollisionsElements } from './collisionsHelper'
 import { isPointArcCollision, isPointPolygonCollision } from './collisions'
 import { notNullable } from '../../utils'
+import me from '../views/meView'
 
 // todo: extract types out of `mathCalc.js` to another file
 // todo: extends Rectangle which extends Point
@@ -191,7 +192,7 @@ export const getElShift = (
 
 // inspiration
 // https://gist.github.com/mattdesl/47412d930dcd8cd765c871a65532ffac
-const distToSegment = (point: Point, line: Line) => {
+export const distToSegment = (point: Point, line: Line) => {
   const dx = line.x2 - line.x1
   const dy = line.y2 - line.y1
   const l2 = dx * dx + dy * dy
@@ -204,113 +205,8 @@ const distToSegment = (point: Point, line: Line) => {
   return distance(point, { x: line.x1 + t * dx, y: line.y1 + t * dy })
 }
 
-const stayInRange = (num: number, { min, max }: { min: number; max: number }) =>
+export const stayInRange = (num: number, { min, max }: { min: number; max: number }) =>
   Math.min(Math.max(min, num), max)
-
-// todo: extract math to engine and logic to game
-export const calculateNewObjPos = (
-  mousePos: Point,
-  view: View,
-  meElement: Circle & { maxSpeedPerSecond: number },
-  timeSinceLastTick: number,
-  playground: Playground
-): Point => {
-  // return neg or pos distance by positions of cursor
-  const { x: distanceX, y: distanceY } = getElShift(
-    mousePos,
-    view,
-    meElement.maxSpeedPerSecond,
-    timeSinceLastTick
-  )
-  //
-  // possible shifts
-  const x = meElement.x + distanceX
-  const y = meElement.y + distanceY
-
-  // walls (poly) collisions
-  const collisionElements = playground.walls.map(wall =>
-    getElementCollisionsElements(wall, meElement.radius)
-  )
-
-  // TODO: refactor this monster code
-  // check center me point collision for each border element
-  const isWallsCollisions = collisionElements
-    .map(wallCollElements =>
-      wallCollElements
-        .map(el => {
-          // return false or new el position -> should be calculated in the different place i guess
-          switch (el.type) {
-            case GameElementType.Arc: {
-              // @ts-ignore
-              const isCol = isPointArcCollision(el, { x, y })
-              if (isCol) {
-                // move user to the edge of collision
-                const angleBetween = getAngleBetweenPoints(el, { x, y })
-                const dist = distance(el, { x, y })
-                const directionVec = angleToUnitVec(angleBetween)
-                return shiftPoint(
-                  { x, y },
-                  {
-                    x: directionVec.x * (meElement.radius - dist),
-                    y: directionVec.y * (meElement.radius - dist),
-                  }
-                )
-              }
-              break
-            }
-            case GameElementType.Polygon: {
-              const isCol = isPointPolygonCollision(el, { x, y })
-              if (isCol) {
-                // const centerPoint = getCenterPointOfLine(el.baseLine)
-                const directionVec = toUnitVec(getNormalVec(getLineVec(el.baseLine)))
-                const dist = distToSegment({ x, y }, el.baseLine)
-                return shiftPoint(
-                  { x, y },
-                  {
-                    x: directionVec.x * (meElement.radius - dist),
-                    y: directionVec.y * (meElement.radius - dist),
-                  }
-                )
-              }
-              break
-            }
-          }
-          return false
-        })
-        .filter(notNullable)
-    )
-    // remove empty collisions -> for cleaner data structure
-    .filter(col => col.length !== 0)
-
-  // cant handle multi advanced collisions with more elements
-  const colFlat = isWallsCollisions.flat(2)
-  if (colFlat.length > 1) {
-    return meElement
-  }
-
-  // TODO: should aggregate collisions and get shortest distance?
-  for (const isWallCollision of colFlat) {
-    if (isWallCollision) {
-      // console.log(isCollision)
-      return isWallCollision as Point
-    }
-  }
-
-  // what about borders???
-  const xWithBorder = stayInRange(x, {
-    min: meElement.radius,
-    max: playground.width - meElement.radius,
-  })
-  const yWithBorder = stayInRange(y, {
-    min: meElement.radius,
-    max: playground.height - meElement.radius,
-  })
-
-  return {
-    x: xWithBorder,
-    y: yWithBorder,
-  }
-}
 
 /**
  * if array has length 0 => reduce return init value (so it returns undefined as we expect)

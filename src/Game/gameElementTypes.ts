@@ -2,6 +2,7 @@
 // todo: extract functions into engine folder
 // primarily used for engine calculations
 // just math stuffs
+// refactor file system
 // ---------------------------------------------------------------
 export type ArcCol = {
   x: number
@@ -71,8 +72,9 @@ export enum GameElementType {
   Polygon = 'Polygon',
 }
 
+// what about class instances?
 // used for game Collisions
-export type GameCollisionsEl =
+export type GameCollisionsElement =
   | (ArcCol & { type: GameElementType.Arc })
   | (Polygon & { type: GameElementType.Polygon; baseLine: Line })
 
