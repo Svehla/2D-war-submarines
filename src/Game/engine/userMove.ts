@@ -1,6 +1,6 @@
 // todo: extract math to engine and logic to game
 
-import { Circle, GameCollisionsElement, GameElementType, Point } from '../gameElementTypes'
+import { Circle, GameCollisionsElement, GameElementType, Point, Polygon } from '../gameElementTypes'
 import { Playground } from '../gameSetup'
 import {
   View,
@@ -32,9 +32,9 @@ export const shiftPosByWallCollisions = (
 ): Point[] => {
   const newPos = { x: meElement.x, y: meElement.y }
   const wallsCollisionsShift = walls
-    // @ts-ignore
-    .flatMap(wall => getElementCollisionsElements(wall, meElement.radius))
-    // collision elements
+    // only Polygons are valid Walls
+    .flatMap(wall => getElementCollisionsElements(wall as Polygon, meElement.radius))
+    // eslint-disable-next-line
     .map(colEl => {
       const el = colEl
       // what about OOP interfaces instead of switch case?
@@ -53,7 +53,7 @@ export const shiftPosByWallCollisions = (
     .filter(notNullable)
     // kinda tricky calculation for shifting of collision
     // and move current point out of the collision
-    // @ts-ignore
+    // eslint-disable-next-line
     .map(collisionElement => {
       const el = collisionElement
       // what about OOP interfaces instead of switch case?

@@ -1,12 +1,6 @@
 import './line'
 import { Circle, GameElement, GameElementType, Line, Point, Rectangle } from '../gameElementTypes'
-import { Playground, RADAR_LOOP_SPEED } from '../gameSetup'
-import { angleToUnitVec, getLineVec, getNormalVec, shiftPoint, toUnitVec } from './vec'
-// import { distToSegment } from './rayCasting'
-import { getElementCollisionsElements } from './collisionsHelper'
-import { isPointArcCollision, isPointPolygonCollision } from './collisions'
-import { notNullable } from '../../utils'
-import me from '../views/meView'
+import { RADAR_LOOP_SPEED } from '../gameSetup'
 
 // todo: extract types out of `mathCalc.js` to another file
 // todo: extends Rectangle which extends Point

@@ -100,4 +100,11 @@ export type GameElementBorder = Polygon &
     type: GameElementType.Polygon
   }
 
+export type MeElementType = Circle & {
+  type: GameElementType.Circle
+  radius: number
+  background: string
+  maxSpeedPerSecond: number
+}
+
 export type GameElement = GameElementFood | GameElementBorder

@@ -1,8 +1,8 @@
 import { Angle, View } from '../engine/mathCalc'
-import { Circle } from '../gameElementTypes'
+import { MeElementType } from '../gameElementTypes'
 
 type Props = {
-  me: Circle & { background: string }
+  me: MeElementType
   view: View
 }
 

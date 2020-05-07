@@ -1,6 +1,6 @@
 import './engine/rayCasting'
 import { Angle, View, calcNewRadarRotation, isInView } from './engine/mathCalc'
-import { GameElement, GameElementType, Line, Radar } from './gameElementTypes'
+import { GameElement, GameElementType, Line, MeElementType, Radar } from './gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
 import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'
@@ -20,7 +20,7 @@ const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
         return item.deleted ? false : isInView(view, item)
       case GameElementType.Rectangle:
         // @ts-ignore: typescript inheritance minus :|
-        return item.deleted ? false : isInView(view, item)
+        return item?.deleted ? false : isInView(view, item)
     }
   })(),
 })
@@ -34,15 +34,13 @@ class GameRoot {
     const view = getView()
     return {
       me: {
-        x: 100 as number,
-        y: 100 as number,
-        // constants => sign it somehow like final const
-        type: GameElementType.Circle as GameElementType,
-        // radius: 5,
+        type: GameElementType.Circle,
+        x: 100,
+        y: 100,
         radius: isMobile ? 60 : 60,
         background: '#559',
         maxSpeedPerSecond: isMobile ? 125 : 250,
-      } as const,
+      } as MeElementType,
       playground,
       view: getView(),
       gameElements,
@@ -234,7 +232,6 @@ class GameRoot {
     playgroundGrid(this._ctx, {
       view: s.view,
       gameElements: s.gameElements,
-      // @ts-ignore
       me: s.me,
       radar: s.radar,
       mousePos: s.mousePosition,
