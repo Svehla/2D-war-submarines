@@ -21,16 +21,17 @@ const gameElement = (ctx: CanvasRenderingContext2D, props: Props) => {
       ctx.rect(x, y, element.width, element.height)
       ctx.fillStyle = element.background
       ctx.fill()
-
-      // reset
+      ctx.closePath()
       ctx.globalAlpha = 1
       break
     case GameElementType.Circle: {
       ctx.beginPath()
-      ctx.arc(view.width / 2, view.height / 2, element.radius, 0, 2 * Math.PI)
-      ctx.closePath()
+      ctx.globalAlpha = opacity
+      ctx.arc(x, y, element.radius, 0, 2 * Math.PI)
       ctx.fillStyle = element.background
       ctx.fill()
+      ctx.closePath()
+      ctx.globalAlpha = 1
       break
       // throw new Error('TODO: implement element rendering')
     }

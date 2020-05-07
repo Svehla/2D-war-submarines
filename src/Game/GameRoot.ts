@@ -1,11 +1,11 @@
 import './engine/rayCasting'
+import { Angle, View, calcNewRadarRotation, isInView } from './engine/mathCalc'
 import { GameElement, GameElementType, Line, Radar } from './gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
-import { View, calcNewRadarRotation, isInView } from './engine/mathCalc'
 import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'
-import { isMobile } from '../utils'
 import { isCircleGameElementCollision } from './engine/collisions'
+import { isMobile } from '../utils'
 import playgroundGrid from './views/playgroundView'
 
 // kinda shitty code
@@ -203,8 +203,9 @@ class GameRoot {
       {
         x: this._gameState.me.x,
         y: this._gameState.me.y,
-        ...this._gameState.radar,
+        radius: this._gameState.radar.radius,
         startAngle: this._gameState.radar.rotation,
+        endAngle: Angle.add(this._gameState.radar.rotation, this._gameState.radar.sectorAngle),
       },
       [...visibleGameElements, ...this._gameState.playground.walls]
     )

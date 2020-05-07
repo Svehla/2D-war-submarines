@@ -211,11 +211,8 @@ export const stayInRange = (num: number, { min, max }: { min: number; max: numbe
 /**
  * if array has length 0 => reduce return init value (so it returns undefined as we expect)
  */
-
-export const findMinByKey = <T extends { [key: string]: any }>(
-  arr: T[],
-  key: string
-): T | undefined => arr.reduce((min, curr) => (min[key] < curr[key] ? min : curr), arr[0])
+export const findMinByKey = <T, K extends keyof T>(arr: Array<T>, key: K): T | undefined =>
+  arr.reduce((min, curr) => (min[key] < curr[key] ? min : curr), arr[0])
 
 const isInAxis = (axisPosition: number, larger: number, lower: number, halfWidth: number) =>
   axisPosition + halfWidth >= larger && axisPosition <= lower + halfWidth

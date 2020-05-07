@@ -4,19 +4,11 @@
 // just math stuffs
 // refactor file system
 // ---------------------------------------------------------------
-export type ArcCol = {
+export type Arc = {
   x: number
   y: number
   startAngle: number
   endAngle: number
-  radius: number
-}
-export type Arc = {
-  x: number
-  y: number
-  // TODO: refactor to endAngle
-  sectorAngle: number
-  startAngle: number
   radius: number
 }
 
@@ -75,7 +67,7 @@ export enum GameElementType {
 // what about class instances?
 // used for game Collisions
 export type GameCollisionsElement =
-  | (ArcCol & { type: GameElementType.Arc })
+  | (Arc & { type: GameElementType.Arc })
   | (Polygon & { type: GameElementType.Polygon; baseLine: Line })
 
 // shared between food and borders
