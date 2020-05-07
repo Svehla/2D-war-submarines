@@ -1,6 +1,6 @@
 // what about to use some library?
 // https://github.com/bmoren/p5.collide2D
-import { Angle, distance, isAngleInArcSector } from '../engine/mathCalc'
+import { Angle, distance, getAngleBetweenPoints, isAngleInArcSector } from '../engine/mathCalc'
 import {
   Arc,
   Circle,
@@ -39,27 +39,12 @@ export const isPointPolygonCollision = ({ points: vertices }: Polygon, point: Po
   return collision
 }
 
-export const isPointArcCollision = (arc: Arc, rect: Point) => {
-  const xDistance = rect.x - arc.x
-  const yDistance = rect.y - arc.y
-
-  // opposite to adjacent triangle side
-  const arcRecCalcAngle = Angle.toDegrees(Math.atan(yDistance / xDistance))
-
-  let arcRecAngle
-  if (xDistance < 0) {
-    // quadrant 2 & 3
-    arcRecAngle = Angle.add(180, arcRecCalcAngle)
-  } else {
-    // quadrant 1 & 4
-    arcRecAngle = Angle.to360Range(arcRecCalcAngle)
-  }
-
-  const startAngle = arc.startAngle
-  // @ts-ignore
-  const endAngle = arc.endAngle
-  // const endAngle = Angle.add(arc.startAngle, arc.sectorAngle)
-  return isAngleInArcSector(arcRecAngle, startAngle, endAngle) && distance(arc, rect) < arc.radius
+export const isPointArcCollision = (arc: Arc, point: Point) => {
+  const arcRecAngle = getAngleBetweenPoints(arc, point)
+  return (
+    isAngleInArcSector(arcRecAngle, arc.startAngle, arc.endAngle) &&
+    distance(arc, point) < arc.radius
+  )
 }
 
 export const isCircleGameElementCollision = (circleShape1: Circle, shape2: GameElement) => {

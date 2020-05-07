@@ -39,7 +39,6 @@ export const getElementCollisionsElements = (
   // filter un-edges/corner (every second) line
   const cornerLines = getLinesFromPoints(shiftedLines).filter((_, i) => 0 === i % 2)
 
-  // console.log(arcRadius)
   // for each point -> there is corner and polygon with collisions
   // @ts-ignore
   return points.flatMap((point, index) => {

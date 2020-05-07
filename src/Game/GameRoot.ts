@@ -223,7 +223,7 @@ class GameRoot {
 
   _draw() {
     if (!this._ctx) {
-      // console.log('cant initialize game')
+      alert("Can't init the game")
       return
     }
 

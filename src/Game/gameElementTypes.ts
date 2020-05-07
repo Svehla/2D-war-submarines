@@ -52,6 +52,7 @@ export type BorderElement = {}
 export type Radar = {
   // TODO: refactor to endAngle
   sectorAngle: number
+  // same as start angle
   rotation: number
   radius: number
   anglePerSecond: number
