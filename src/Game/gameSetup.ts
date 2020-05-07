@@ -1,7 +1,7 @@
 import { GameElementFood, GameElementType } from './gameElementTypes'
 import { createGameBorderElement, createGameFoodElements } from './createGameElements'
-
-import { isMobile } from '../utils'
+import { getLinesFromShape } from './mapGenerator/mapGenerator'
+import shape1 from './mapGenerator/shape1'
 
 export const getView = () => ({
   width: window.innerWidth,
@@ -16,11 +16,22 @@ export const RADAR_LOOP_SPEED = 15000
 // export const RADAR_LOOP_SPEED = 1000
 export const RADAR_VISIBLE_DELAY = RADAR_LOOP_SPEED / 2 // ms
 
+const myPolygon = getLinesFromShape(shape1, {
+  x: 0,
+  y: 0,
+})
 export const playground = {
-  width: isMobile ? 2500 : 2000,
-  height: isMobile ? 2500 : 2000,
+  width: 2000,
+  height: 2000,
   // todo: rename it to: walls
   walls: [
+    createGameBorderElement({
+      background: 'navy',
+      points: myPolygon.points.map(point => ({
+        x: 600 + point.x * 30,
+        y: 200 + point.y * 30,
+      })),
+    }),
     createGameBorderElement({
       background: 'green',
       points: [
@@ -51,6 +62,7 @@ export const playground = {
     }),
   ],
 }
+console.log(playground)
 
 export type Playground = typeof playground
 
