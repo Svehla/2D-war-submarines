@@ -1,17 +1,12 @@
 import './engine/rayCasting'
-import { GameElement, GameElementType, Line, Radar } from './gameElementTypes'
+import { Angle, View, calcNewRadarRotation, isInView } from './engine/mathCalc'
+import { GameElement, GameElementType, Line, MeElementType, Radar } from './gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
-import {
-  View,
-  calcNewRadarRotation,
-  calculateNewObjPos,
-  decreaseBy1ToZero,
-  isInView,
-} from './engine/mathCalc'
+import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'
+import { isCircleGameElementCollision } from './engine/collisions'
 import { isMobile } from '../utils'
-import { /*isArcRectCollision,*/ isTwoElementCollision } from './engine/collisions'
-import playgroundGrid from './views/playground'
+import playgroundGrid from './views/playgroundView'
 
 // kinda shitty code
 const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
@@ -25,7 +20,7 @@ const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
         return item.deleted ? false : isInView(view, item)
       case GameElementType.Rectangle:
         // @ts-ignore: typescript inheritance minus :|
-        return item.deleted ? false : isInView(view, item)
+        return item?.deleted ? false : isInView(view, item)
     }
   })(),
 })
@@ -33,20 +28,19 @@ const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
 /**
  * base class for handling whole game state & logic
  */
+const RADAR_SECTOR_ANGLE = 30
 class GameRoot {
   static getGameState() {
     const view = getView()
     return {
       me: {
-        x: view.leftX + view.width / 2,
-        y: view.topY + view.height / 2,
-        // constants => sign it somehow like final const
-        type: GameElementType.Circle as GameElementType,
+        type: GameElementType.Circle,
+        x: 100,
+        y: 100,
         radius: isMobile ? 60 : 60,
         background: '#559',
         maxSpeedPerSecond: isMobile ? 125 : 250,
-      } as const,
-      cameraShakeIntensity: 0,
+      } as MeElementType,
       playground,
       view: getView(),
       gameElements,
@@ -60,8 +54,8 @@ class GameRoot {
       // ray cast is calculated from radar view
       radar: {
         // center coordination
-        rotation: 0,
-        sectorAngle: 30,
+        startAngle: 0,
+        endAngle: RADAR_SECTOR_ANGLE,
         radius: 480,
       } as Radar,
       rayCastRays: [] as Line[],
@@ -69,14 +63,7 @@ class GameRoot {
   }
 
   /**
-   * it's like React.ref
-   *
-   * don't want to rerender react app (aka change state)
-   * while i catch event for mouse is moved -> i will wait till game loop will check it by itself
-   *
    * i don't care about immutability
-   *
-   * I use this.state for triggering of render method -> its triggered by `requestAnimationFrame`
    */
   _gameState: ReturnType<typeof GameRoot.getGameState>
   _highResTimestamp = 0
@@ -109,12 +96,13 @@ class GameRoot {
   // and react event handling
   // --------------------------
 
-  public handleResize = (e: any) => {
+  public handleResize = () => {
     this._gameState.view.width = window.innerWidth
     this._gameState.view.height = window.innerHeight
     this._canvasRef.width = this._gameState.view.width
     this._canvasRef.height = this._gameState.view.height
   }
+
   // use for desktop support
   public handleMouseMove = (e: MouseEvent) => {
     const x = e.pageX
@@ -163,10 +151,7 @@ class GameRoot {
       this._gameState.view,
       this._gameState.me,
       timeSinceLastTick,
-      this._gameState.playground,
-      {
-        cameraShakeIntensity: this._gameState.cameraShakeIntensity,
-      }
+      this._gameState.playground
     )
 
     // update static tick stuffs (radar & view & my position)
@@ -175,13 +160,14 @@ class GameRoot {
       me: { ...this._gameState.me, x, y },
       view: {
         ...this._gameState.view,
-        leftX: x - this._gameState.view.width / 2,
-        topY: y - this._gameState.view.height / 2,
+        x: x - this._gameState.view.width / 2,
+        y: y - this._gameState.view.height / 2,
       },
     }
 
     const newRadarRotationAngle = calcNewRadarRotation()
-    this._gameState.radar.rotation = newRadarRotationAngle
+    this._gameState.radar.startAngle = newRadarRotationAngle
+    this._gameState.radar.endAngle = Angle.add(newRadarRotationAngle, RADAR_SECTOR_ANGLE)
 
     // borders
     this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
@@ -192,31 +178,22 @@ class GameRoot {
     const updatedGameElements = this._gameState.gameElements
       // add max speed threshold around the view
       .map(item => addViewProperty(item, this._gameState.view))
-      // todo: outdated value of radar (one frame out -> change order of setting values)
-      // todo: does it make sense for implemented rayCasting?
-      // .map(item => addArcViewProperty(this._gameState.radar, me, item as any))
       .map(item => {
-        // @ts-ignore
         if (item.deleted) {
           return item
         }
         if (!item.visibleInView) {
           return item
         }
-        // is not in collision -> just return and ignore next code..
-        // @ts-ignore
-        if (!isTwoElementCollision(this._gameState.me, item)) {
-          return item
+        if (isCircleGameElementCollision(this._gameState.me, item)) {
+          return { ...item, deleted: true }
         }
-        return { ...item, deleted: true }
+        return item
       })
-
     this._gameState.gameElements = updatedGameElements.map(item => ({
       ...item,
       seenByRadar: item.seenByRadar > 0 ? item.seenByRadar - timeSinceLastTick : 0,
     }))
-
-    this._gameState.cameraShakeIntensity = decreaseBy1ToZero(this._gameState.cameraShakeIntensity)
 
     const visibleGameElements = this._gameState.gameElements.filter(
       e => e.visibleInView && !e.deleted
@@ -226,8 +203,9 @@ class GameRoot {
       {
         x: this._gameState.me.x,
         y: this._gameState.me.y,
-        ...this._gameState.radar,
-        startAngle: this._gameState.radar.rotation,
+        radius: this._gameState.radar.radius,
+        startAngle: this._gameState.radar.startAngle,
+        endAngle: this._gameState.radar.endAngle,
       },
       [...visibleGameElements, ...this._gameState.playground.walls]
     )
@@ -245,7 +223,7 @@ class GameRoot {
 
   _draw() {
     if (!this._ctx) {
-      // console.log('cant initialize game')
+      alert("Can't init the game")
       return
     }
 
@@ -254,7 +232,6 @@ class GameRoot {
     playgroundGrid(this._ctx, {
       view: s.view,
       gameElements: s.gameElements,
-      // @ts-ignore
       me: s.me,
       radar: s.radar,
       mousePos: s.mousePosition,

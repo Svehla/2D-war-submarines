@@ -18,9 +18,9 @@ const rayCast = (ctx: CanvasRenderingContext2D, props: Props) => {
 
   ctx.lineTo(centerPoint.x, centerPoint.y)
   props.rays.forEach(line => {
-    const { x: x2, y: y2 } = getRelativePosByAbsPos(view, { x: line.x2, y: line.y2 })
+    const { x, y } = getRelativePosByAbsPos(view, { x: line.e.x, y: line.e.y })
 
-    ctx.lineTo(x2, y2)
+    ctx.lineTo(x, y)
   })
   ctx.lineTo(centerPoint.x, centerPoint.y)
   ctx.closePath()

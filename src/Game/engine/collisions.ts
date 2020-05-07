@@ -1,6 +1,5 @@
 // what about to use some library?
 // https://github.com/bmoren/p5.collide2D
-import { Angle, distance, isAngleInArcSector } from '../engine/mathCalc'
 import {
   Arc,
   Circle,
@@ -10,115 +9,53 @@ import {
   Polygon,
   Rectangle,
 } from '../gameElementTypes'
+import { distance, getAngleBetweenPoints, isAngleInArcSector } from '../engine/mathCalc'
 
-export const isTwoElementCollision = (circleShape1: Circle, shape2: GameElement) => {
+// https://github.com/bmoren/p5.collide2D/blob/master/p5.collide2d.js#L228
+export const isPointPolygonCollision = ({ points: vertices }: Polygon, point: Point): boolean => {
+  const px = point.x
+  const py = point.y
+  let collision = false
+
+  // go through each of the vertices, plus the next vertex in the list
+  let next = 0
+  for (let current = 0; current < vertices.length; current++) {
+    // get next vertex in list if we've hit the end, wrap around to 0
+    next = current + 1
+    if (next === vertices.length) next = 0
+
+    // get the PVectors at our current position this makes our if statement a little cleaner
+    const vc = vertices[current] // c for "current"
+    const vn = vertices[next] // n for "next"
+
+    // compare position, flip 'collision' variable back and forth
+    if (
+      ((vc.y > py && vn.y < py) || (vc.y < py && vn.y > py)) &&
+      px < ((vn.x - vc.x) * (py - vc.y)) / (vn.y - vc.y) + vc.x
+    ) {
+      collision = !collision
+    }
+  }
+  return collision
+}
+
+export const isPointArcCollision = (arc: Arc, point: Point) => {
+  const arcRecAngle = getAngleBetweenPoints(arc, point)
+  return (
+    isAngleInArcSector(arcRecAngle, arc.startAngle, arc.endAngle) &&
+    distance(arc, point) < arc.radius
+  )
+}
+
+export const isCircleGameElementCollision = (circleShape1: Circle, shape2: GameElement) => {
   switch (shape2.type) {
     case GameElementType.Circle:
       return isCircleCircleCollision(circleShape1, shape2)
     case GameElementType.Rectangle:
       return isRectangleCircleCollision(circleShape1, shape2)
     case GameElementType.Polygon:
-      return isPolygonCircleCollision(circleShape1, shape2)
+      throw new Error('not supported yet')
   }
-}
-
-/**
- * TODO: correct arc collision ->
- *
- * now its arc -> Point collision
- */
-export const isArcRectCollision = (arc: Arc, shape2: GameElement) => {
-  switch (shape2.type) {
-    case GameElementType.Circle:
-      return isPointArcCollision(arc, {
-        // for easier math I temporary transform circles into point
-        x: shape2.x,
-        y: shape2.y,
-      })
-    case GameElementType.Rectangle:
-      return isPointArcCollision(arc, shape2)
-    case GameElementType.Polygon:
-      // will not use it in the future -> refactor
-      return isPolygonArcCollision(arc, shape2)
-    default:
-      throw new Error('bad runtime shape type')
-  }
-}
-
-const isPolygonCircleCollision = (circle: Circle, polygon: Polygon) => {
-  // todo: implement method
-  return false
-}
-
-const isPolygonArcCollision = (arc: Arc, polygon: Polygon) => {
-  // todo: implement method
-  return false
-}
-
-/**
- *
- * ## How does it work
- * for each sector i calculate ratio of triangle sides
- *
- * `atan` calculate opposite to adjacent side.In our case its `y/x` like:
- *
- * ```
- * | q. 1 |  q.2 | q. 3 | q. 4 |
- * |------|------|------|------|
- * |      |      |      |      |
- * | C___ | C___ | C    |    C |
- * |    | | |    | |    |    | |
- * |  \ | | | /  | | \  |  / | |
- * |    y | y    | ___x | x___ |
- * |      |      |      |      |
- * |------|------|------|------|
- * ```
- * * x -> x axis
- * * y -> y axis
- * * C -> relative center (0, 0)
- *
- * on diagram below you can see math quadrants
- *
- * ```
- * |-------|-------|
- * | 3→ pa | 4↓ na |
- * |-------|-------| 0deg - 360deg
- * | ↑2 na | ←1 pa |
- * |-------|-------|
- * * pa -> returns positive angle
- * * na -> returns negative angle
- * ```
- *
- * ### different behavior for left and right half of quadrants
- * * q.2 + q.3 - we have to add 180deg for correct angle value
- * * q4        - returns negative number -> so we correct it back to 360 range
- *
- * Why use Arc Collision and not the `line point/object`?
- * I have to use sector for checking collisions coz line is too thin and I frame rate is too fast
- * so it could miss some object
- *
- * TODO: make isRectArcCollision
- */
-const isPointArcCollision = (arc: Arc, rect: Point) => {
-  const xDistance = rect.x - arc.x
-  const yDistance = rect.y - arc.y
-
-  // opposite to adjacent triangle side
-  const arcRecCalcAngle = Angle.toDegrees(Math.atan(yDistance / xDistance))
-
-  //
-  let arcRecAngle
-  if (xDistance < 0) {
-    // quadrant 2 & 3
-    arcRecAngle = Angle.add(180, arcRecCalcAngle)
-  } else {
-    // quadrant 1 & 4
-    arcRecAngle = Angle.to360Range(arcRecCalcAngle)
-  }
-
-  const startAngle = arc.startAngle
-  const endAngle = Angle.add(arc.startAngle, arc.sectorAngle)
-  return isAngleInArcSector(arcRecAngle, startAngle, endAngle) && distance(arc, rect) < arc.radius
 }
 
 const isRectangleCircleCollision = (circle: Circle, rect: Rectangle) => {
@@ -156,6 +93,3 @@ const isCircleCircleCollision = (circle1: Circle, circle2: Circle): boolean => {
   const distance = Math.sqrt(dx * dx + dy * dy)
   return distance < circle1.radius + circle2.radius
 }
-
-// export for unit test cases
-export const _isPointArcCollision = isPointArcCollision
