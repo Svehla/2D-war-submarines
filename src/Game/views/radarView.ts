@@ -16,8 +16,8 @@ const radarView = (ctx: CanvasRenderingContext2D, { view, radar }: Props) => {
     x,
     y,
     radar.radius,
-    Angle.toRadians(radar.rotation - 40),
-    Angle.toRadians(radar.rotation - 40 + radar.sectorAngle + 40)
+    Angle.toRadians(radar.startAngle - 40),
+    Angle.toRadians(radar.endAngle)
   )
   ctx.lineTo(x, y)
   const grd = ctx.createLinearGradient(view.width / 2, view.height / 2, 100, 100)

@@ -50,10 +50,8 @@ export type BorderElement = {}
 // ---------------------------------------------------------------
 // similar to arc but customized for the current game
 export type Radar = {
-  // TODO: refactor to endAngle
-  sectorAngle: number
-  // same as start angle
-  rotation: number
+  startAngle: number
+  endAngle: number
   radius: number
   anglePerSecond: number
 }

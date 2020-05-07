@@ -28,6 +28,7 @@ const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
 /**
  * base class for handling whole game state & logic
  */
+const RADAR_SECTOR_ANGLE = 30
 class GameRoot {
   static getGameState() {
     const view = getView()
@@ -55,8 +56,8 @@ class GameRoot {
       // ray cast is calculated from radar view
       radar: {
         // center coordination
-        rotation: 0,
-        sectorAngle: 30,
+        startAngle: 0,
+        endAngle: RADAR_SECTOR_ANGLE,
         radius: 480,
       } as Radar,
       rayCastRays: [] as Line[],
@@ -167,7 +168,8 @@ class GameRoot {
     }
 
     const newRadarRotationAngle = calcNewRadarRotation()
-    this._gameState.radar.rotation = newRadarRotationAngle
+    this._gameState.radar.startAngle = newRadarRotationAngle
+    this._gameState.radar.endAngle = Angle.add(newRadarRotationAngle, RADAR_SECTOR_ANGLE)
 
     // borders
     this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
@@ -204,8 +206,8 @@ class GameRoot {
         x: this._gameState.me.x,
         y: this._gameState.me.y,
         radius: this._gameState.radar.radius,
-        startAngle: this._gameState.radar.rotation,
-        endAngle: Angle.add(this._gameState.radar.rotation, this._gameState.radar.sectorAngle),
+        startAngle: this._gameState.radar.startAngle,
+        endAngle: this._gameState.radar.endAngle,
       },
       [...visibleGameElements, ...this._gameState.playground.walls]
     )
