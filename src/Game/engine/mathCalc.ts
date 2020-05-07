@@ -1,12 +1,6 @@
 import './line'
 import { Circle, GameElement, GameElementType, Line, Point, Rectangle } from '../gameElementTypes'
-import { Playground, RADAR_LOOP_SPEED } from '../gameSetup'
-import { angleToUnitVec, getLineVec, getNormalVec, shiftPoint, toUnitVec } from './vec'
-// import { distToSegment } from './rayCasting'
-import { getElementCollisionsElements } from './collisionsHelper'
-import { isPointArcCollision, isPointPolygonCollision } from './collisions'
-import { notNullable } from '../../utils'
-import me from '../views/meView'
+import { RADAR_LOOP_SPEED } from '../gameSetup'
 
 // todo: extract types out of `mathCalc.js` to another file
 // todo: extends Rectangle which extends Point
@@ -193,16 +187,16 @@ export const getElShift = (
 // inspiration
 // https://gist.github.com/mattdesl/47412d930dcd8cd765c871a65532ffac
 export const distToSegment = (point: Point, line: Line) => {
-  const dx = line.x2 - line.x1
-  const dy = line.y2 - line.y1
+  const dx = line.e.x - line.s.x
+  const dy = line.e.y - line.s.y
   const l2 = dx * dx + dy * dy
 
-  if (l2 === 0) return distance(point, { x: line.x1, y: line.y1 })
+  if (l2 === 0) return distance(point, { x: line.s.x, y: line.s.y })
 
-  let t = ((point.x - line.x1) * dx + (point.y - line.y1) * dy) / l2
+  let t = ((point.x - line.s.x) * dx + (point.y - line.s.y) * dy) / l2
   t = Math.max(0, Math.min(1, t))
 
-  return distance(point, { x: line.x1 + t * dx, y: line.y1 + t * dy })
+  return distance(point, { x: line.s.x + t * dx, y: line.s.y + t * dy })
 }
 
 export const stayInRange = (num: number, { min, max }: { min: number; max: number }) =>
@@ -211,11 +205,8 @@ export const stayInRange = (num: number, { min, max }: { min: number; max: numbe
 /**
  * if array has length 0 => reduce return init value (so it returns undefined as we expect)
  */
-
-export const findMinByKey = <T extends { [key: string]: any }>(
-  arr: T[],
-  key: string
-): T | undefined => arr.reduce((min, curr) => (min[key] < curr[key] ? min : curr), arr[0])
+export const findMinByKey = <T, K extends keyof T>(arr: Array<T>, key: K): T | undefined =>
+  arr.reduce((min, curr) => (min[key] < curr[key] ? min : curr), arr[0])
 
 const isInAxis = (axisPosition: number, larger: number, lower: number, halfWidth: number) =>
   axisPosition + halfWidth >= larger && axisPosition <= lower + halfWidth

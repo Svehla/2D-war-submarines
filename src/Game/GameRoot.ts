@@ -1,11 +1,11 @@
 import './engine/rayCasting'
-import { GameElement, GameElementType, Line, Radar } from './gameElementTypes'
+import { Angle, View, calcNewRadarRotation, isInView } from './engine/mathCalc'
+import { GameElement, GameElementType, Line, MeElementType, Radar } from './gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
-import { View, calcNewRadarRotation, isInView } from './engine/mathCalc'
 import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'
+import { isCircleGameElementCollision } from './engine/collisions'
 import { isMobile } from '../utils'
-import { isTwoGameElementCollision } from './engine/collisions'
 import playgroundGrid from './views/playgroundView'
 
 // kinda shitty code
@@ -20,7 +20,7 @@ const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
         return item.deleted ? false : isInView(view, item)
       case GameElementType.Rectangle:
         // @ts-ignore: typescript inheritance minus :|
-        return item.deleted ? false : isInView(view, item)
+        return item?.deleted ? false : isInView(view, item)
     }
   })(),
 })
@@ -28,20 +28,19 @@ const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
 /**
  * base class for handling whole game state & logic
  */
+const RADAR_SECTOR_ANGLE = 30
 class GameRoot {
   static getGameState() {
     const view = getView()
     return {
       me: {
-        x: 100 as number,
-        y: 100 as number,
-        // constants => sign it somehow like final const
-        type: GameElementType.Circle as GameElementType,
-        // radius: 5,
+        type: GameElementType.Circle,
+        x: 100,
+        y: 100,
         radius: isMobile ? 60 : 60,
         background: '#559',
         maxSpeedPerSecond: isMobile ? 125 : 250,
-      } as const,
+      } as MeElementType,
       playground,
       view: getView(),
       gameElements,
@@ -55,8 +54,8 @@ class GameRoot {
       // ray cast is calculated from radar view
       radar: {
         // center coordination
-        rotation: 0,
-        sectorAngle: 30,
+        startAngle: 0,
+        endAngle: RADAR_SECTOR_ANGLE,
         radius: 480,
       } as Radar,
       rayCastRays: [] as Line[],
@@ -167,7 +166,8 @@ class GameRoot {
     }
 
     const newRadarRotationAngle = calcNewRadarRotation()
-    this._gameState.radar.rotation = newRadarRotationAngle
+    this._gameState.radar.startAngle = newRadarRotationAngle
+    this._gameState.radar.endAngle = Angle.add(newRadarRotationAngle, RADAR_SECTOR_ANGLE)
 
     // borders
     this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
@@ -185,7 +185,7 @@ class GameRoot {
         if (!item.visibleInView) {
           return item
         }
-        if (isTwoGameElementCollision(this._gameState.me, item)) {
+        if (isCircleGameElementCollision(this._gameState.me, item)) {
           return { ...item, deleted: true }
         }
         return item
@@ -203,8 +203,9 @@ class GameRoot {
       {
         x: this._gameState.me.x,
         y: this._gameState.me.y,
-        ...this._gameState.radar,
-        startAngle: this._gameState.radar.rotation,
+        radius: this._gameState.radar.radius,
+        startAngle: this._gameState.radar.startAngle,
+        endAngle: this._gameState.radar.endAngle,
       },
       [...visibleGameElements, ...this._gameState.playground.walls]
     )
@@ -222,7 +223,7 @@ class GameRoot {
 
   _draw() {
     if (!this._ctx) {
-      // console.log('cant initialize game')
+      alert("Can't init the game")
       return
     }
 
@@ -231,7 +232,6 @@ class GameRoot {
     playgroundGrid(this._ctx, {
       view: s.view,
       gameElements: s.gameElements,
-      // @ts-ignore
       me: s.me,
       radar: s.radar,
       mousePos: s.mousePosition,

@@ -1,5 +1,13 @@
 import { Angle, distance, findMinByKey } from './mathCalc'
-import { Arc, GameElement, GameElementType, Line, Point, Polygon } from '../gameElementTypes'
+import {
+  Arc,
+  Circle,
+  GameElement,
+  GameElementType,
+  Line,
+  Point,
+  Polygon,
+} from '../gameElementTypes'
 import { RAY_COUNT } from '../gameSetup'
 import { getLinesFromPoints } from './line'
 import { notNullable } from '../../utils'
@@ -13,8 +21,14 @@ import { notNullable } from '../../utils'
  * return undefined value if 2 line are the same or there is no intersection point
  */
 const collideLineLine = (line1: Line, line2: Line): Point | undefined => {
-  const { x1, y1, x2, y2 } = line1
-  const { x1: x3, y1: y3, x2: x4, y2: y4 } = line2
+  const {
+    s: { x: x1, y: y1 },
+    e: { x: x2, y: y2 },
+  } = line1
+  const {
+    s: { x: x3, y: y3 },
+    e: { x: x4, y: y4 },
+  } = line2
 
   let intersection
 
@@ -41,12 +55,72 @@ const collideLineLine = (line1: Line, line2: Line): Point | undefined => {
   return undefined
 }
 
+// https://stackoverflow.com/a/37225895/8995887
+type LineCircleCol = [] | [Point] | [Point, Point]
+const collideLineCircle = (line: Line, circle: Circle): LineCircleCol => {
+  const v1 = {
+    x: line.e.x - line.s.x,
+    y: line.e.y - line.s.y,
+  }
+  const v2 = {
+    x: line.s.x - circle.x,
+    y: line.s.y - circle.y,
+  }
+  let b = v1.x * v2.x + v1.y * v2.y
+  const c = 2 * (v1.x * v1.x + v1.y * v1.y)
+  b *= -2
+  const d = Math.sqrt(b * b - 2 * c * (v2.x * v2.x + v2.y * v2.y - circle.radius * circle.radius))
+  if (isNaN(d)) {
+    // no intercept
+    return []
+  }
+  const u1 = (b - d) / c // these represent the unit distance of point one and two on the line
+  const u2 = (b + d) / c
+  let retP1: Point
+  let retP2: Point
+  const ret: LineCircleCol = [] // return array
+  if (u1 <= 1 && u1 >= 0) {
+    // add point if on the line segment
+    retP1 = {
+      x: line.s.x + v1.x * u1,
+      y: line.s.y + v1.y * u1,
+    }
+    // @ts-ignore
+    ret[0] = retP1
+  }
+  if (u2 <= 1 && u2 >= 0) {
+    // second add point if on the line segment
+    retP2 = {
+      x: line.s.x + v1.x * u2,
+      y: line.s.y + v1.y * u2,
+    }
+    // @ts-ignore
+    ret[ret.length] = retP2
+  }
+  return ret
+}
+
+const getNearestLineCircleCollision = (line: Line, circle: Circle) => {
+  const startPoint = {
+    x: line.s.x,
+    y: line.s.y,
+  }
+  const collisions = collideLineCircle(line, circle)
+    .flat()
+    .map(point => ({
+      point,
+      distance: distance(startPoint, point),
+    }))
+
+  return findMinByKey(collisions, 'distance')
+}
+
 const getNearestLinePolygonCollision = (line: Line, polygon: Polygon) => {
   const polygonLines = getLinesFromPoints(polygon.points)
 
   const startPoint = {
-    x: line.x1,
-    y: line.y1,
+    x: line.s.x,
+    y: line.s.y,
   }
   const collisionDistances = polygonLines
     .map(pLine => collideLineLine(line, pLine))
@@ -62,9 +136,10 @@ const getNearestLinePolygonCollision = (line: Line, polygon: Polygon) => {
 export const getRayCastCollisions = (arc: Arc, gameElements: GameElement[]) => {
   // generate vectors from radar values
   const rayVectors = Array.from({ length: RAY_COUNT })
-    .map((_, index) =>
-      Angle.to360Range(arc.startAngle + (arc.sectorAngle / (RAY_COUNT - 1)) * index)
-    )
+    .map((_, index) => {
+      const sectorAngle = Angle.sub(arc.endAngle, arc.startAngle)
+      return Angle.to360Range(arc.startAngle + (sectorAngle / (RAY_COUNT - 1)) * index)
+    })
     .map(angle => ({
       x: Math.cos(Angle.toRadians(angle)),
       y: Math.sin(Angle.toRadians(angle)),
@@ -72,15 +147,17 @@ export const getRayCastCollisions = (arc: Arc, gameElements: GameElement[]) => {
 
   const rayLines = rayVectors
     // recalculate angles to 2D lines
-    .map(({ x, y }) => ({
-      x1: arc.x,
-      y1: arc.y,
-      x2: x * arc.radius + arc.x,
-      y2: y * arc.radius + arc.y,
-    }))
+    .map(
+      ({ x, y }): Line => ({
+        s: arc,
+        e: {
+          x: x * arc.radius + arc.x,
+          y: y * arc.radius + arc.y,
+        },
+      })
+    )
     .map(rayLine => {
       // calculate collisions cor each ray
-      // make rectangle line collision
       const rayElCollisions = gameElements
         .map(el => {
           let nearPoint
@@ -103,6 +180,7 @@ export const getRayCastCollisions = (arc: Arc, gameElements: GameElement[]) => {
             }
             case GameElementType.Circle:
               // TODO: implement circle collision behavior
+              nearPoint = getNearestLineCircleCollision(rayLine, el)
               break
           }
           return nearPoint
@@ -127,10 +205,8 @@ export const getRayCastCollisions = (arc: Arc, gameElements: GameElement[]) => {
       return {
         distance: shortestDistance.distance,
         collisionId: shortestDistance.id,
-        x1: rayLine.x1,
-        y1: rayLine.y1,
-        x2: shortestDistance.point.x,
-        y2: shortestDistance.point.y,
+        s: rayLine.s,
+        e: shortestDistance.point,
       }
     })
 

@@ -1,4 +1,4 @@
-import { Circle, GameElementFood, Line, Point, Radar } from '../gameElementTypes'
+import { GameElementFood, Line, MeElementType, Point, Radar } from '../gameElementTypes'
 import { View } from '../engine/mathCalc'
 import { playground } from '../gameSetup'
 import borderGrid from './borderGridView'
@@ -12,7 +12,7 @@ import wall from './wallView'
 type Props = {
   view: View
   gameElements: GameElementFood[]
-  me: Circle & { playground: string }
+  me: MeElementType
   radar: Radar
   mousePos: Point
   rayCastRays: Line[]
