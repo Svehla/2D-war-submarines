@@ -49,8 +49,8 @@ export const getElementCollisionsElements = (
         x: point.x,
         y: point.y,
         type: GameElementType.Arc,
-        startAngle: getAngleBetweenPoints(point, { x: line.x1, y: line.y1 }),
-        endAngle: getAngleBetweenPoints(point, { x: line.x2, y: line.y2 }),
+        startAngle: getAngleBetweenPoints(point, { x: line.s.x, y: line.s.y }),
+        endAngle: getAngleBetweenPoints(point, { x: line.e.x, y: line.e.y }),
         radius: colSize,
       },
       {
@@ -60,20 +60,20 @@ export const getElementCollisionsElements = (
         baseLine: polygonLines[index],
         points: [
           {
-            x: shiftedCollisionsLines[index].x1,
-            y: shiftedCollisionsLines[index].y1,
+            x: shiftedCollisionsLines[index].s.x,
+            y: shiftedCollisionsLines[index].s.y,
           },
           {
-            x: shiftedCollisionsLines[index].x2,
-            y: shiftedCollisionsLines[index].y2,
+            x: shiftedCollisionsLines[index].e.x,
+            y: shiftedCollisionsLines[index].e.y,
           },
           {
-            x: polygonLines[index].x2,
-            y: polygonLines[index].y2,
+            x: polygonLines[index].e.x,
+            y: polygonLines[index].e.y,
           },
           {
-            x: polygonLines[index].x1,
-            y: polygonLines[index].y1,
+            x: polygonLines[index].s.x,
+            y: polygonLines[index].s.y,
           },
         ],
       },

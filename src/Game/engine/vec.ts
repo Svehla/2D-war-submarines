@@ -28,8 +28,8 @@ export const toUnitVec = (Vec: { x: number; y: number }) => {
 
 export const getLineVec = (line: Line): Vec => {
   return {
-    y: line.y2 - line.y1,
-    x: line.x2 - line.x1,
+    y: line.e.y - line.s.y,
+    x: line.e.x - line.s.x,
   }
 }
 

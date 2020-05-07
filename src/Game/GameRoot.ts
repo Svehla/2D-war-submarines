@@ -5,7 +5,7 @@ import { View, calcNewRadarRotation, isInView } from './engine/mathCalc'
 import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'
 import { isMobile } from '../utils'
-import { isTwoGameElementCollision } from './engine/collisions'
+import { isCircleGameElementCollision } from './engine/collisions'
 import playgroundGrid from './views/playgroundView'
 
 // kinda shitty code
@@ -185,7 +185,7 @@ class GameRoot {
         if (!item.visibleInView) {
           return item
         }
-        if (isTwoGameElementCollision(this._gameState.me, item)) {
+        if (isCircleGameElementCollision(this._gameState.me, item)) {
           return { ...item, deleted: true }
         }
         return item

@@ -27,10 +27,10 @@ export type Polygon = {
 
 // todo: refactor to from: Point, to: Point -> for easier integrations
 export type Line = {
-  x1: number
-  y1: number
-  x2: number
-  y2: number
+  // start point
+  s: Point
+  // end point
+  e: Point
 }
 
 export type Point = {

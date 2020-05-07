@@ -13,8 +13,14 @@ import { notNullable } from '../../utils'
  * return undefined value if 2 line are the same or there is no intersection point
  */
 const collideLineLine = (line1: Line, line2: Line): Point | undefined => {
-  const { x1, y1, x2, y2 } = line1
-  const { x1: x3, y1: y3, x2: x4, y2: y4 } = line2
+  const {
+    s: { x: x1, y: y1 },
+    e: { x: x2, y: y2 },
+  } = line1
+  const {
+    s: { x: x3, y: y3 },
+    e: { x: x4, y: y4 },
+  } = line2
 
   let intersection
 
@@ -45,8 +51,8 @@ const getNearestLinePolygonCollision = (line: Line, polygon: Polygon) => {
   const polygonLines = getLinesFromPoints(polygon.points)
 
   const startPoint = {
-    x: line.x1,
-    y: line.y1,
+    x: line.s.x,
+    y: line.s.y,
   }
   const collisionDistances = polygonLines
     .map(pLine => collideLineLine(line, pLine))
@@ -73,10 +79,14 @@ export const getRayCastCollisions = (arc: Arc, gameElements: GameElement[]) => {
   const rayLines = rayVectors
     // recalculate angles to 2D lines
     .map(({ x, y }) => ({
-      x1: arc.x,
-      y1: arc.y,
-      x2: x * arc.radius + arc.x,
-      y2: y * arc.radius + arc.y,
+      s: {
+        x: arc.x,
+        y: arc.y,
+      },
+      e: {
+        x: x * arc.radius + arc.x,
+        y: y * arc.radius + arc.y,
+      },
     }))
     .map(rayLine => {
       // calculate collisions cor each ray
@@ -127,10 +137,14 @@ export const getRayCastCollisions = (arc: Arc, gameElements: GameElement[]) => {
       return {
         distance: shortestDistance.distance,
         collisionId: shortestDistance.id,
-        x1: rayLine.x1,
-        y1: rayLine.y1,
-        x2: shortestDistance.point.x,
-        y2: shortestDistance.point.y,
+        s: {
+          x: rayLine.s.x,
+          y: rayLine.s.y,
+        },
+        e: {
+          x: shortestDistance.point.x,
+          y: shortestDistance.point.y,
+        },
       }
     })
 

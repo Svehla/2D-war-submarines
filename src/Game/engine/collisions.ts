@@ -46,7 +46,6 @@ export const isPointArcCollision = (arc: Arc, rect: Point) => {
   // opposite to adjacent triangle side
   const arcRecCalcAngle = Angle.toDegrees(Math.atan(yDistance / xDistance))
 
-  //
   let arcRecAngle
   if (xDistance < 0) {
     // quadrant 2 & 3
@@ -63,7 +62,7 @@ export const isPointArcCollision = (arc: Arc, rect: Point) => {
   return isAngleInArcSector(arcRecAngle, startAngle, endAngle) && distance(arc, rect) < arc.radius
 }
 
-export const isTwoGameElementCollision = (circleShape1: Circle, shape2: GameElement) => {
+export const isCircleGameElementCollision = (circleShape1: Circle, shape2: GameElement) => {
   switch (shape2.type) {
     case GameElementType.Circle:
       return isCircleCircleCollision(circleShape1, shape2)

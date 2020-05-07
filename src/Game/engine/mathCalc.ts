@@ -193,16 +193,16 @@ export const getElShift = (
 // inspiration
 // https://gist.github.com/mattdesl/47412d930dcd8cd765c871a65532ffac
 export const distToSegment = (point: Point, line: Line) => {
-  const dx = line.x2 - line.x1
-  const dy = line.y2 - line.y1
+  const dx = line.e.x - line.s.x
+  const dy = line.e.y - line.s.y
   const l2 = dx * dx + dy * dy
 
-  if (l2 === 0) return distance(point, { x: line.x1, y: line.y1 })
+  if (l2 === 0) return distance(point, { x: line.s.x, y: line.s.y })
 
-  let t = ((point.x - line.x1) * dx + (point.y - line.y1) * dy) / l2
+  let t = ((point.x - line.s.x) * dx + (point.y - line.s.y) * dy) / l2
   t = Math.max(0, Math.min(1, t))
 
-  return distance(point, { x: line.x1 + t * dx, y: line.y1 + t * dy })
+  return distance(point, { x: line.s.x + t * dx, y: line.s.y + t * dy })
 }
 
 export const stayInRange = (num: number, { min, max }: { min: number; max: number }) =>
