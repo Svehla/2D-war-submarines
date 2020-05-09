@@ -20,7 +20,7 @@ import { notNullable } from '../../utils'
  *
  * return undefined value if 2 line are the same or there is no intersection point
  */
-const collideLineLine = (line1: Line, line2: Line): Point | undefined => {
+export const collideLineLine = (line1: Line, line2: Line): Point | undefined => {
   const {
     s: { x: x1, y: y1 },
     e: { x: x2, y: y2 },

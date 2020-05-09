@@ -43,63 +43,6 @@ const angleTo360Range = (ang: number) => (360 + (ang % 360)) % 360
 
 /**
  *
- *
- * transpose axis system into start
- * TODO: add documentation
- * edge case over 360deg???
- * const startShifted = 0
- * TODO: add angle module
- * TODO: add radius of `Arc` Component
- */
-export const isAngleInArcSector = (angle: number, startAngle: number, endAngle: number) => {
-  const endAngleShifted = subAngles(endAngle, startAngle)
-  const compareAngle = subAngles(angle, startAngle)
-
-  return compareAngle <= endAngleShifted
-}
-
-// static methods :smirk:
-export const Angle = {
-  toRadians,
-  toDegrees,
-  sub: subAngles,
-  add: addAngles,
-  to360Range: angleTo360Range,
-}
-//
-export const decreaseBy1ToZero = (num: number) => Math.max(num - 1, 0)
-
-export const pythagorC = (a: number, b: number) => Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2))
-
-/**
- *
- * radar has to have position by timestamp (aka it has to be synchronized by server)
- *
- * how to sync it with server? (have to use server timestamp + calc ping time somehow)
- * https://stackoverflow.com/a/5357794/8995887
- *
- */
-// todo: make variable for slow down the radar
-export const calcNewRadarRotation = () => {
-  // return 0
-  const ms = new Date().getTime()
-
-  const currentCircle = ms % RADAR_LOOP_SPEED
-
-  return normalizeInto01(currentCircle, 0, RADAR_LOOP_SPEED) * 360
-}
-
-// inspiration: https://stackoverflow.com/questions/39776819/function-to-normalize-any-number-from-0-1
-export const normalizeInto01 = (val: number, min = 0, max = 0) => (val - min) / (max - min)
-
-export const distance = (a: Point, b: Point) => {
-  const xDiff = a.x - b.x
-  const yDiff = a.y - b.y
-  return pythagorC(xDiff, yDiff)
-}
-
-/**
- *
  * ## How does it work
  * for each sector i calculate ratio of triangle sides
  *
@@ -141,7 +84,6 @@ export const getAngleBetweenPoints = (angleFromP: Point, angleToP: Point) => {
   // relative coords
   const xDiff = angleToP.x - angleFromP.x
   const yDiff = angleToP.y - angleFromP.y
-
   if (xDiff === 0 && yDiff === 0) {
     return 0
   }
@@ -160,6 +102,63 @@ export const getAngleBetweenPoints = (angleFromP: Point, angleToP: Point) => {
   return arcRecAngle
 }
 
+/**
+ *
+ *
+ * transpose axis system into start
+ * TODO: add documentation
+ * edge case over 360deg???
+ * const startShifted = 0
+ * TODO: add angle module
+ * TODO: add radius of `Arc` Component
+ */
+export const isAngleInArcSector = (angle: number, startAngle: number, endAngle: number) => {
+  const endAngleShifted = subAngles(endAngle, startAngle)
+  const compareAngle = subAngles(angle, startAngle)
+
+  return compareAngle <= endAngleShifted
+}
+
+// static methods :smirk:
+export const Angle = {
+  toRadians,
+  toDegrees,
+  sub: subAngles,
+  add: addAngles,
+  to360Range: angleTo360Range,
+  getAngleBetweenPoints,
+}
+//
+export const decreaseBy1ToZero = (num: number) => Math.max(num - 1, 0)
+
+export const pythagorC = (a: number, b: number) => Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2))
+
+/**
+ *
+ * radar has to have position by timestamp (aka it has to be synchronized by server)
+ *
+ * how to sync it with server? (have to use server timestamp + calc ping time somehow)
+ * https://stackoverflow.com/a/5357794/8995887
+ *
+ */
+// todo: make variable for slow down the radar
+export const calcNewRadarRotation = () => {
+  // return 0
+  const ms = new Date().getTime()
+
+  const currentCircle = ms % RADAR_LOOP_SPEED
+
+  return normalizeInto01(currentCircle, 0, RADAR_LOOP_SPEED) * 360
+}
+
+// inspiration: https://stackoverflow.com/questions/39776819/function-to-normalize-any-number-from-0-1
+export const normalizeInto01 = (val: number, min = 0, max = 0) => (val - min) / (max - min)
+
+export const distance = (a: Point, b: Point) => {
+  const xDiff = a.x - b.x
+  const yDiff = a.y - b.y
+  return pythagorC(xDiff, yDiff)
+}
 const ACCELERATION_SPEED_COEFFICIENT = 40
 export const getElShift = (
   mousePos: Point,
@@ -171,7 +170,7 @@ export const getElShift = (
     x: view.width / 2,
     y: view.height / 2,
   }
-  const angle = getAngleBetweenPoints(centerMePos, mousePos)
+  const angle = Angle.getAngleBetweenPoints(centerMePos, mousePos)
   const d = distance(mousePos, centerMePos)
   const acceleration = Math.pow(d / ACCELERATION_SPEED_COEFFICIENT, 2)
   const maxSpeedPerInterval = maxSpeedPerSecond / (1000 / timeSinceLastTick)
@@ -198,10 +197,6 @@ export const distToSegment = (point: Point, line: Line) => {
 
   return distance(point, { x: line.s.x + t * dx, y: line.s.y + t * dy })
 }
-
-export const stayInRange = (num: number, { min, max }: { min: number; max: number }) =>
-  Math.min(Math.max(min, num), max)
-
 /**
  * if array has length 0 => reduce return init value (so it returns undefined as we expect)
  */
@@ -210,18 +205,6 @@ export const findMinByKey = <T, K extends keyof T>(arr: Array<T>, key: K): T | u
 
 const isInAxis = (axisPosition: number, larger: number, lower: number, halfWidth: number) =>
   axisPosition + halfWidth >= larger && axisPosition <= lower + halfWidth
-
-/**
- * range define borders like:
- *  -1 ... 1
- *  -5 ... 5
- *
- * this function check if `num` is inside of that range
- * if not -> move it to max/min value
- *
- * TODO: refactor name to: moveToRange?
- */
-export const getInRange = (num: number, range = 1) => stayInRange(num, { min: -range, max: range })
 
 /**
  * check if `gameElement` is in view (screen that user can see)

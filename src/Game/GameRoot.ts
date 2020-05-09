@@ -39,7 +39,7 @@ class GameRoot {
         y: 100,
         radius: isMobile ? 60 : 60,
         background: '#559',
-        maxSpeedPerSecond: isMobile ? 125 : 250,
+        maxSpeedPerSecond: 200,
       } as MeElementType,
       playground,
       view: getView(),

@@ -1,87 +1,77 @@
 // todo: extract math to engine and logic to game
-
-import { Circle, GameCollisionsElement, GameElementType, Point, Polygon } from '../gameElementTypes'
+import { Angle, View, distToSegment, distance, getElShift } from './mathCalc'
+import { Circle, GameCollisionsElement, GameElementType, Point } from '../gameElementTypes'
 import { Playground } from '../gameSetup'
-import {
-  View,
-  distToSegment,
-  distance,
-  getAngleBetweenPoints,
-  getElShift,
-  stayInRange,
-} from './mathCalc'
 import { angleToUnitVec, getLineVec, getNormalVec, shiftPoint, toUnitVec } from './vec'
-import { getElementCollisionsElements } from './collisionsHelper'
+import { getWallCollisionElements } from './collisionsHelper'
 import { isPointArcCollision, isPointPolygonCollision } from './collisions'
-import { notNullable } from '../../utils'
+
+const isGameColElCollide = (circle: Circle, wall: GameCollisionsElement) => {
+  // what about OOP interfaces instead of switch case?
+  switch (wall.type) {
+    case GameElementType.Arc: {
+      return isPointArcCollision(wall, circle)
+    }
+    case GameElementType.Polygon: {
+      return isPointPolygonCollision(wall, circle)
+    }
+  }
+}
 
 /**
  * return new possible shifted positions of main circle by wall collisions
  *
- * take Circle el possition and calculate all collisions
+ * take Circle el position and calculate all collisions
  * with walls
  *
  * it there is collision with wall => it calc shifted element position by vector of move
- *
- * returns array of shifted positions
- * kinda weird API right??? todo: refactor it to make it more logical :|
  */
-export const shiftPosByWallCollisions = (
-  meElement: Circle,
-  walls: GameCollisionsElement[]
-): Point[] => {
-  const newPos = { x: meElement.x, y: meElement.y }
-  const wallsCollisionsShift = walls
-    // only Polygons are valid Walls
-    .flatMap(wall => getElementCollisionsElements(wall as Polygon, meElement.radius))
-    // eslint-disable-next-line
-    .map(colEl => {
-      const el = colEl
-      // what about OOP interfaces instead of switch case?
-      switch (el.type) {
-        case GameElementType.Arc: {
-          // @ts-ignore
-          const isCol = isPointArcCollision(el, newPos)
-          return isCol ? el : undefined
-        }
-        case GameElementType.Polygon: {
-          const isCol = isPointPolygonCollision(el, newPos)
-          return isCol ? el : undefined
-        }
-      }
-    })
-    .filter(notNullable)
-    // kinda tricky calculation for shifting of collision
-    // and move current point out of the collision
-    // eslint-disable-next-line
-    .map(collisionElement => {
-      const el = collisionElement
-      // what about OOP interfaces instead of switch case?
-      switch (el.type) {
-        case GameElementType.Arc: {
-          // move user to the edge of collision
-          const angleBetween = getAngleBetweenPoints(el, newPos)
-          const distanceToEdge = distance(el, newPos)
-          const directionVec = angleToUnitVec(angleBetween)
-          return { directionVec, distanceToEdge }
-        }
-        case GameElementType.Polygon: {
-          // const centerPoint = getCenterPointOfLine(el.baseLine)
-          const directionVec = toUnitVec(getNormalVec(getLineVec(el.baseLine)))
-          const distanceToEdge = distToSegment(newPos, el.baseLine)
-          return { directionVec, distanceToEdge }
-        }
-      }
-    })
-    // @ts-ignore
-    .map(({ directionVec, distanceToEdge }) =>
-      shiftPoint(newPos, {
-        x: directionVec.x * (meElement.radius - distanceToEdge),
-        y: directionVec.y * (meElement.radius - distanceToEdge),
-      })
-    )
+const shiftPosByWallCollisions = (
+  prevPos: Circle,
+  newPos: Circle,
+  gameColEl: GameCollisionsElement[]
+) => {
+  if (gameColEl.length === 0) {
+    return newPos
+  }
 
-  return wallsCollisionsShift
+  if (gameColEl.length === 1) {
+    const colEl = gameColEl[0]
+    let relativeShift
+    switch (colEl.type) {
+      case GameElementType.Arc: {
+        // move user to the edge of collision
+        const angleBetween = Angle.getAngleBetweenPoints(colEl, newPos)
+        const disToInnerEdge = distance(colEl, newPos)
+        const directionVec = angleToUnitVec(angleBetween)
+        relativeShift = { directionVec, disToInnerEdge }
+        break
+      }
+      case GameElementType.Polygon: {
+        const directionVec = toUnitVec(getNormalVec(getLineVec(colEl.baseLine)))
+        const disToInnerEdge = distToSegment(newPos, colEl.baseLine)
+        relativeShift = { directionVec, disToInnerEdge }
+        break
+      }
+    }
+    return shiftPoint(newPos, {
+      x: relativeShift.directionVec.x * (newPos.radius - relativeShift.disToInnerEdge),
+      y: relativeShift.directionVec.y * (newPos.radius - relativeShift.disToInnerEdge),
+    })
+  }
+
+  if (gameColEl.length === 2) {
+    // TODO: not implemented yet
+    // calculate shifted position back out of collision
+    return prevPos
+  }
+
+  // does not support collisions with more than 2 elements
+  // i hope that there will not be collisions of more that 2 elements
+  // in one pixel
+  // .... .... or -> find closest intersection of these n elements
+  // element will not shift
+  return prevPos
 }
 
 export const calculateNewObjPos = (
@@ -98,48 +88,24 @@ export const calculateNewObjPos = (
     meElement.maxSpeedPerSecond,
     timeSinceLastTick
   )
-  //
-  // possible shifts
-  const newPos = {
+  // possible shifts without borders
+  const newMeEl = {
     x: meElement.x + distanceX,
     y: meElement.y + distanceY,
+    radius: meElement.radius,
   }
 
-  // position correction by element collision
-  // TODO: refactor this monster code
-  // check center me point collision for each border element
+  const collidedColElements = playground.walls
+    .flatMap(wall => getWallCollisionElements(wall, newMeEl.radius))
+    .filter(colEl => isGameColElCollide(newMeEl, colEl))
 
-  // TODO: fix closest position to the all edges
-  // cant handle multi advanced collisions with more elements
-  const colFlat = shiftPosByWallCollisions(
-    { x: newPos.x, y: newPos.y, radius: meElement.radius },
-    // @ts-ignore
-    playground.walls
-  )
-  if (colFlat.length > 1) {
-    return meElement
-  }
-
-  // TODO: should aggregate collisions and get shortest distance?
-  for (const isWallCollision of colFlat) {
-    if (isWallCollision) {
-      // console.log(isCollision)
-      return isWallCollision as Point
-    }
-  }
-
-  // what about borders???
-  const xWithBorder = stayInRange(newPos.x, {
-    min: meElement.radius,
-    max: playground.width - meElement.radius,
-  })
-  const yWithBorder = stayInRange(newPos.y, {
-    min: meElement.radius,
-    max: playground.height - meElement.radius,
-  })
+  // if (collidedColElements.length > 0) {
+  //   console.log(collidedColElements)
+  // }
+  const meShiftedPoint = shiftPosByWallCollisions(meElement, newMeEl, collidedColElements)
 
   return {
-    x: xWithBorder,
-    y: yWithBorder,
+    x: meShiftedPoint.x,
+    y: meShiftedPoint.y,
   }
 }

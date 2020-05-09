@@ -1,6 +1,6 @@
 import { Angle, View, getRelativePosByAbsPos } from '../engine/mathCalc'
 import { GameElementType, Polygon } from '../gameElementTypes'
-import { getElementCollisionsElements } from '../engine/collisionsHelper'
+import { getWallCollisionElements } from '../engine/collisionsHelper'
 
 type Props = {
   view: View
@@ -13,7 +13,7 @@ const wallCollision = (ctx: CanvasRenderingContext2D, props: Props) => {
   const points = polygon.points
   const relativePoints = points.map(point => getRelativePosByAbsPos(view, point))
 
-  const colElements = getElementCollisionsElements({ points: relativePoints }, collisionRadius)
+  const colElements = getWallCollisionElements({ points: relativePoints }, collisionRadius)
 
   colElements.forEach(el => {
     switch (el.type) {

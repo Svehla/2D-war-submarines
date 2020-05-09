@@ -1,5 +1,5 @@
+import { Angle } from '../engine/mathCalc'
 import { GameCollisionsElement, GameElementType, Line, Polygon } from '../gameElementTypes'
-import { getAngleBetweenPoints } from '../engine/mathCalc'
 import { getLineVec, getNormalVec, multiplyVec, toUnitVec } from '../engine/vec'
 import { getLinesFromPoints, getPointsFromLines } from '../engine/line'
 import { shiftLine } from '../engine/line'
@@ -21,16 +21,16 @@ const moveLastItemToHead = <T>(arr: T[]) => {
 // todo: add docs
 // todo: does not work for triangles :( (odd count of lines??? i guess???)
 // TODO: does not work if points are in the bad order
-export const getElementCollisionsElements = (
+export const getWallCollisionElements = (
   pol: Polygon,
-  colSize: number
+  colRadius: number
 ): GameCollisionsElement[] => {
   const points = pol.points
 
   const polygonLines = getLinesFromPoints(points)
   const shiftedCollisionsLines: Line[] = polygonLines.map(line => {
     const lVec = getNormalVec(getLineVec(line))
-    const shiftVec = multiplyVec(toUnitVec(lVec), colSize)
+    const shiftVec = multiplyVec(toUnitVec(lVec), colRadius)
     return shiftLine(line, shiftVec)
   })
 
@@ -48,14 +48,15 @@ export const getElementCollisionsElements = (
         x: point.x,
         y: point.y,
         type: GameElementType.Arc,
-        startAngle: getAngleBetweenPoints(point, { x: line.s.x, y: line.s.y }),
-        endAngle: getAngleBetweenPoints(point, { x: line.e.x, y: line.e.y }),
-        radius: colSize,
+        startAngle: Angle.getAngleBetweenPoints(point, { x: line.s.x, y: line.s.y }),
+        endAngle: Angle.getAngleBetweenPoints(point, { x: line.e.x, y: line.e.y }),
+        radius: colRadius,
       },
       {
         type: GameElementType.Polygon,
         // magic trick how to do 2times more lines :D
         // have to known outer and inner line for getting normal vector
+        // todo: should be read only -> coz of duplicit definition (or add proper method for getting normal Vec)
         baseLine: polygonLines[index],
         points: [
           {

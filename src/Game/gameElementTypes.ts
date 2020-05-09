@@ -31,18 +31,14 @@ export type Point = {
 }
 
 // todo: should inherit from point?
-export type Rectangle = {
-  x: number
-  y: number
+export type Rectangle = Point & {
   width: number
   height: number
 }
 
 // todo: should inherit from point?
-export type Circle = {
+export type Circle = Point & {
   radius: number
-  x: number
-  y: number
 }
 export type BorderElement = {}
 
@@ -63,8 +59,7 @@ export enum GameElementType {
   Polygon = 'Polygon',
 }
 
-// what about class instances?
-// used for game Collisions
+// this is helper type for calculating of the GameElementBorer collisions with the current user
 export type GameCollisionsElement =
   | (Arc & { type: GameElementType.Arc })
   | (Polygon & { type: GameElementType.Polygon; baseLine: Line })
@@ -95,6 +90,7 @@ export type GameElementFood =
         type: GameElementType.Circle
       })
 
+// border is physics element viewed in the screen which works like a wall for the user
 export type GameElementBorder = Polygon &
   GameElementProps & {
     type: GameElementType.Polygon

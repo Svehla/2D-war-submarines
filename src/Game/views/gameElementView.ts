@@ -33,7 +33,6 @@ const gameElement = (ctx: CanvasRenderingContext2D, props: Props) => {
       ctx.closePath()
       ctx.globalAlpha = 1
       break
-      // throw new Error('TODO: implement element rendering')
     }
   }
 }
