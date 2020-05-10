@@ -1,6 +1,6 @@
 import './engine/rayCasting'
 import { Angle, View, calcNewRadarRotation, isInView } from './engine/mathCalc'
-import { GameElement, GameElementType, Line, MeElementType, Radar } from './gameElementTypes'
+import { GameElement, GameElementType, Line, MeElementType, Radar } from './engine/gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
 import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'

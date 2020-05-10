@@ -1,4 +1,4 @@
-import { Polygon } from '../gameElementTypes'
+import { Polygon } from '../engine/gameElementTypes'
 import { View, getRelativePosByAbsPos } from '../engine/mathCalc'
 import wallCollision from './wallCollisionView'
 

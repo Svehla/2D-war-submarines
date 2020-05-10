@@ -1,4 +1,4 @@
-import { GameElementFood, GameElementType } from '../gameElementTypes'
+import { GameElementFood, GameElementType } from '../engine/gameElementTypes'
 import { RADAR_VISIBLE_DELAY } from '../gameSetup'
 import { View, getRelativePosByAbsPos, normalizeInto01 } from '../engine/mathCalc'
 

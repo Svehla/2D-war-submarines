@@ -1,13 +1,5 @@
 import { Angle, distance, findMinByKey } from './mathCalc'
-import {
-  Arc,
-  Circle,
-  GameElement,
-  GameElementType,
-  Line,
-  Point,
-  Polygon,
-} from '../gameElementTypes'
+import { Arc, Circle, GameElement, GameElementType, Line, Point, Polygon } from './gameElementTypes'
 import { RAY_COUNT } from '../gameSetup'
 import { getLinesFromPoints } from './line'
 import { notNullable } from '../../utils'

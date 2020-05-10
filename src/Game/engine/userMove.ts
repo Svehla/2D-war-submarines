@@ -1,6 +1,6 @@
 // todo: extract math to engine and logic to game
 import { Angle, View, distToSegment, distance, getElShift } from './mathCalc'
-import { Circle, GameCollisionsElement, GameElementType, Point } from '../gameElementTypes'
+import { Circle, GameCollisionsElement, GameElementType, Point } from './gameElementTypes'
 import { Playground } from '../gameSetup'
 import { angleToUnitVec, getLineVec, getNormalVec, shiftPoint, toUnitVec } from './vec'
 import { getWallCollisionElements } from './collisionsHelper'

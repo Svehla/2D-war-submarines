@@ -1,5 +1,5 @@
 import { Angle, View } from '../engine/mathCalc'
-import { MeElementType } from '../gameElementTypes'
+import { MeElementType } from '../engine/gameElementTypes'
 
 type Props = {
   me: MeElementType

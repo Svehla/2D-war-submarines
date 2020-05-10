@@ -1,4 +1,4 @@
-import { GameElementBorder, GameElementFood, GameElementType } from './gameElementTypes'
+import { GameElementBorder, GameElementFood, GameElementType } from './engine/gameElementTypes'
 import { createGameBorderElement, createGameFoodElements } from './createGameElements'
 import { getLinesFromShape } from './mapGenerator/mapGenerator'
 import shape1 from './mapGenerator/shape1'

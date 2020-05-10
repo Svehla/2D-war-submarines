@@ -1,5 +1,5 @@
 import { Angle, View, getRelativePosByAbsPos } from '../engine/mathCalc'
-import { GameElementType, Polygon } from '../gameElementTypes'
+import { GameElementType, Polygon } from '../engine/gameElementTypes'
 import { getWallCollisionElements } from '../engine/collisionsHelper'
 
 type Props = {

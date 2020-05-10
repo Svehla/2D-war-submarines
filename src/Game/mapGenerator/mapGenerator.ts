@@ -1,7 +1,7 @@
 // todo: fix lint
 /* eslint-disable */
 // import { Angle } from '../engine/mathCalc'
-import { Point, Polygon } from '../gameElementTypes'
+import { Point, Polygon } from '../engine/gameElementTypes'
 
 // use http://asciiflow.com/ for generating maps
 const map1 = `

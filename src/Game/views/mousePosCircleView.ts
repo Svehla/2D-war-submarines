@@ -1,4 +1,4 @@
-import { Point } from '../gameElementTypes'
+import { Point } from '../engine/gameElementTypes'
 
 type Props = {
   mousePos: Point

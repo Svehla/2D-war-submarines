@@ -1,5 +1,5 @@
 import './line'
-import { Circle, GameElement, GameElementType, Line, Point, Rectangle } from '../gameElementTypes'
+import { Circle, GameElement, GameElementType, Line, Point, Rectangle } from './gameElementTypes'
 import { RADAR_LOOP_SPEED } from '../gameSetup'
 
 // todo: extract types out of `mathCalc.js` to another file

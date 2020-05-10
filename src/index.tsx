@@ -1,3 +1,4 @@
+import './react-app-env.d.ts'
 import * as serviceWorker from './serviceWorker'
 import App from './App'
 import React from 'react'

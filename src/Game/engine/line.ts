@@ -1,4 +1,4 @@
-import { Line, Point } from '../gameElementTypes'
+import { Line, Point } from './gameElementTypes'
 import { Vec } from './vec'
 
 export const getPointsFromLines = (lines: Line[]): Point[] => {

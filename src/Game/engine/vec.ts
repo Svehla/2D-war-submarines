@@ -1,5 +1,5 @@
 import { Angle, pythagorC } from './mathCalc'
-import { Line, Point } from '../gameElementTypes'
+import { Line, Point } from './gameElementTypes'
 
 export type Vec = {
   x: number

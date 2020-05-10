@@ -4,7 +4,7 @@ import {
   GameElementFoodType,
   GameElementType,
   Point,
-} from './gameElementTypes'
+} from './engine/gameElementTypes'
 import { playground } from './gameSetup'
 import { randomColor } from '../utils'
 
