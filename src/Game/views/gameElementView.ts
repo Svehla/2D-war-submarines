@@ -1,32 +1,40 @@
-import { GameElementFood, GameElementType } from '../engine/gameElementTypes'
+import { CameraRotation, GameElementFood, GameElementType } from '../engine/gameElementTypes'
 import { RADAR_VISIBLE_DELAY } from '../gameSetup'
 import { View, getRelativePosByAbsPos, normalizeInto01 } from '../engine/mathCalc'
+import { rotatePoint, rotateRectangle } from '../engine/rotation'
 
 type Props = {
   element: GameElementFood
   view: View
+  cameraRotation: CameraRotation
 }
 
-// does not support images yet
-const gameElement = (ctx: CanvasRenderingContext2D, props: Props) => {
-  const { element, view } = props
+const gameElementView = (ctx: CanvasRenderingContext2D, props: Props) => {
+  const { element, view, cameraRotation } = props
 
-  const { x, y } = getRelativePosByAbsPos(view, { x: element.x, y: element.y })
   const opacity = normalizeInto01(element.seenByRadar, 0, RADAR_VISIBLE_DELAY)
 
   switch (element.type) {
     case GameElementType.Rectangle:
+      const poly = rotateRectangle(element, cameraRotation.point, cameraRotation.angle)
+
       ctx.beginPath()
       ctx.globalAlpha = opacity
-      ctx.rect(x, y, element.width, element.height)
+      poly.points.forEach(point => {
+        const { x, y } = getRelativePosByAbsPos(view, { x: point.x, y: point.y })
+        ctx.lineTo(x, y)
+      })
       ctx.fillStyle = element.background
       ctx.fill()
       ctx.closePath()
       ctx.globalAlpha = 1
       break
     case GameElementType.Circle: {
+      const rotatedCircle = rotatePoint(element, cameraRotation.point, cameraRotation.angle)
+
       ctx.beginPath()
       ctx.globalAlpha = opacity
+      const { x, y } = getRelativePosByAbsPos(view, rotatedCircle)
       ctx.arc(x, y, element.radius, 0, 2 * Math.PI)
       ctx.fillStyle = element.background
       ctx.fill()
@@ -37,4 +45,4 @@ const gameElement = (ctx: CanvasRenderingContext2D, props: Props) => {
   }
 }
 
-export default gameElement
+export default gameElementView

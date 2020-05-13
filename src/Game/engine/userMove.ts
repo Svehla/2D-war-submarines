@@ -2,7 +2,7 @@
 import { Angle, View, distToSegment, distance, getElShift } from './mathCalc'
 import { Circle, GameCollisionsElement, GameElementType, Point } from './gameElementTypes'
 import { Playground } from '../gameSetup'
-import { angleToUnitVec, getLineVec, getNormalVec, shiftPoint, toUnitVec } from './vec'
+import { Vec, angleToUnitVec, getLineVec, getNormalVec, shiftPoint, toUnitVec } from './vec'
 import { getWallCollisionElements } from './collisionsHelper'
 import { isPointArcCollision, isPointPolygonCollision } from './collisions'
 
@@ -75,7 +75,7 @@ const shiftPosByWallCollisions = (
 }
 
 export const calculateNewObjPos = (
-  mousePos: Point,
+  directionVec: Vec,
   view: View,
   meElement: Circle & { maxSpeedPerSecond: number },
   timeSinceLastTick: number,
@@ -83,7 +83,7 @@ export const calculateNewObjPos = (
 ): Point => {
   // return neg or pos distance by positions of cursor
   const { x: distanceX, y: distanceY } = getElShift(
-    mousePos,
+    directionVec,
     view,
     meElement.maxSpeedPerSecond,
     timeSinceLastTick

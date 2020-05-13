@@ -6,7 +6,8 @@ import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'
 import { isCircleGameElementCollision } from './engine/collisions'
 import { isMobile } from '../utils'
-import playgroundGrid from './views/playgroundView'
+import { rotateAbsPoint } from './engine/vec'
+import playgroundGridView from './views/playgroundGridView'
 
 // kinda shitty code
 const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
@@ -39,17 +40,23 @@ class GameRoot {
         y: 100,
         radius: isMobile ? 60 : 60,
         background: '#559',
-        maxSpeedPerSecond: 200,
+        maxSpeedPerSecond: 100,
+        rotationAngle: 180,
       } as MeElementType,
       playground,
       view: getView(),
       gameElements,
       authCode: '',
       volume: 0,
-      mousePosition: {
+      realMousePosition: {
         x: view.width / 2,
         y: view.height / 2,
       },
+      // for calc of velocity and direction
+      // mousePosition: {
+      //   x: view.width / 2,
+      //   y: view.height / 2,
+      // },
       // speed of radar is const by timestamp
       // ray cast is calculated from radar view
       radar: {
@@ -87,6 +94,30 @@ class GameRoot {
     this._canvasRef.height = this._gameState.view.height
 
     this._ctx = this._canvasRef.getContext('2d')!
+
+    // keyboard game control
+    // document.addEventListener('keydown', e => {
+    //   if (e.keyCode === 38) {
+    //     // up arrow
+    //     // console.log('up arrow')
+    //     this._gameState.me.maxSpeedPerSecond += 10
+    //   }
+    //   if (e.keyCode === 40) {
+    //     // down arrow
+    //     // console.log('down arrow')
+    //     this._gameState.me.maxSpeedPerSecond -= 10
+    //   }
+    //   if (e.keyCode === 37) {
+    //     // left arrow
+    //     // console.log('left arrow')
+    //     this._gameState.me.rotationAngle += 2
+    //   }
+    //   if (e.keyCode === 39) {
+    //     // right arrow
+    //     // console.log('right arrow')
+    //     this._gameState.me.rotationAngle -= 2
+    //   }
+    // })
   }
 
   // --------------------------
@@ -107,22 +138,7 @@ class GameRoot {
   public handleMouseMove = (e: MouseEvent) => {
     const x = e.pageX
     const y = e.pageY
-    this._gameState.mousePosition = { x, y }
-  }
-
-  // TODO: add mobile support
-  public handlePlaygroundMove = (e: any) => {
-    e.preventDefault()
-    // TODO: add mobile support
-    // const touch = e.touches[0]
-    // const mouseEvent = new MouseEvent('mousemove', {
-    //   clientX: touch.clientX,
-    //   clientY: touch.clientY,
-    // })
-    // this._canvasRef.current?.dispatchEvent(mouseEvent)
-    // @ts-ignore
-    // const { x, y } = e.target.getStage().getPointerPosition()
-    // this._gameState.mousePosition = { x, y }
+    this._gameState.realMousePosition = { x, y }
   }
 
   // --------------------------
@@ -133,7 +149,9 @@ class GameRoot {
     this._highResTimestamp = highResTimestamp
     this._recalculateGameLoopState(timeSinceLastTick)
     this._draw()
+    // setTimeout(() => {
     this.frameId = requestAnimationFrame(this._tick)
+    // }, 200)
   }
 
   /**
@@ -141,13 +159,51 @@ class GameRoot {
    * each actions is recalculated by each frame in this function
    */
   _recalculateGameLoopState = (timeSinceLastTick: number) => {
+    const s = this._gameState
+
+    const relCenterPoint = {
+      x: this._gameState.view.width / 2,
+      y: this._gameState.view.height / 2,
+    }
+    // TODO: add speed by length from ceenter circle to mousePos
+    // rotated mouse pos absolutely from the current rotation
+    const rotatedMousePos = rotateAbsPoint(
+      // user should still go to the top of the screen
+      { x: 0, y: -400 },
+      // magic
+      Angle.sub(360, this._gameState.me.rotationAngle)
+    )
+
+    // TODO: change mousePos to direction Vec
+    // calc velocity and direction from this variable
+    const relativeDirectionVec = {
+      x: relCenterPoint.x + rotatedMousePos.x,
+      y: relCenterPoint.y + rotatedMousePos.y,
+    }
+
+    // TODO: recalculate x coord to angle
+    // TODO: add speed with clock game time
+    this._gameState.me.rotationAngle =
+      s.realMousePosition.x > this._gameState.view.width / 2 - 100 &&
+      s.realMousePosition.x < this._gameState.view.width / 2 + 100
+        ? this._gameState.me.rotationAngle
+        : s.realMousePosition.x > this._gameState.view.width / 2
+        ? Angle.sub(this._gameState.me.rotationAngle, 1)
+        : Angle.add(this._gameState.me.rotationAngle, 1)
+
+    /////
+    /////
+    /////
+    /////
+    /////
+    /////
     // todo: does not work.....
     this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
       addViewProperty(item, this._gameState.view)
     )
     // TODO: add border collisions (optimise it with addViewProperty)
     const { x, y } = calculateNewObjPos(
-      this._gameState.mousePosition,
+      relativeDirectionVec,
       this._gameState.view,
       this._gameState.me,
       timeSinceLastTick,
@@ -229,12 +285,11 @@ class GameRoot {
 
     const s = this._gameState
 
-    playgroundGrid(this._ctx, {
+    playgroundGridView(this._ctx, {
       view: s.view,
       gameElements: s.gameElements,
       me: s.me,
       radar: s.radar,
-      mousePos: s.mousePosition,
       rayCastRays: s.rayCastRays,
       playground: s.playground,
     })

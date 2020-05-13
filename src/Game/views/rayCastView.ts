@@ -1,13 +1,20 @@
-import { Line } from '../engine/gameElementTypes'
+import { CameraRotation, Line } from '../engine/gameElementTypes'
 import { View, getRelativePosByAbsPos } from '../engine/mathCalc'
+import { rotatePoint } from '../engine/rotation'
 
 type Props = {
   view: View
   rays: Line[]
+  cameraRotation: CameraRotation
 }
 
-const rayCast = (ctx: CanvasRenderingContext2D, props: Props) => {
+const rayCastView = (ctx: CanvasRenderingContext2D, props: Props) => {
   const view = props.view
+
+  const rotatedLines = props.rays.map(line => ({
+    s: rotatePoint(line.s, props.cameraRotation.point, props.cameraRotation.angle),
+    e: rotatePoint(line.e, props.cameraRotation.point, props.cameraRotation.angle),
+  }))
 
   const centerPoint = {
     x: view.width / 2,
@@ -17,9 +24,8 @@ const rayCast = (ctx: CanvasRenderingContext2D, props: Props) => {
   ctx.beginPath()
 
   ctx.lineTo(centerPoint.x, centerPoint.y)
-  props.rays.forEach(line => {
+  rotatedLines.forEach(line => {
     const { x, y } = getRelativePosByAbsPos(view, { x: line.e.x, y: line.e.y })
-
     ctx.lineTo(x, y)
   })
   ctx.lineTo(centerPoint.x, centerPoint.y)
@@ -33,4 +39,4 @@ const rayCast = (ctx: CanvasRenderingContext2D, props: Props) => {
   ctx.fill()
 }
 
-export default rayCast
+export default rayCastView

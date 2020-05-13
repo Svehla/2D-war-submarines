@@ -32,9 +32,9 @@ class GameRootReactWrapper extends React.Component<{}> {
   render() {
     return (
       <canvas
-        onTouchStart={this._game?.handlePlaygroundMove}
-        onTouchMove={this._game?.handlePlaygroundMove}
-        onTouchEnd={this._game?.handlePlaygroundMove}
+        // onTouchStart={this._game?.handlePlaygroundMove}
+        // onTouchMove={this._game?.handlePlaygroundMove}
+        // onTouchEnd={this._game?.handlePlaygroundMove}
         ref={this._canvasRef}
       />
     )

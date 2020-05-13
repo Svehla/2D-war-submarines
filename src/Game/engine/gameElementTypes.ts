@@ -101,6 +101,12 @@ export type MeElementType = Circle & {
   radius: number
   background: string
   maxSpeedPerSecond: number
+  rotationAngle: number
 }
 
 export type GameElement = GameElementFood | GameElementBorder
+
+export type CameraRotation = {
+  point: Point
+  angle: number
+}

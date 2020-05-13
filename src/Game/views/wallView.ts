@@ -1,26 +1,34 @@
-import { Polygon } from '../engine/gameElementTypes'
+import { CameraRotation, Polygon } from '../engine/gameElementTypes'
 import { View, getRelativePosByAbsPos } from '../engine/mathCalc'
+import { rotatePolygon } from '../engine/rotation'
 import wallCollision from './wallCollisionView'
 
 type Props = {
   collisionSize: number
   view: View
   wall: { background: string } & Polygon
+  cameraRotation: CameraRotation
 }
 
 const SHOW_WALL_COLLISIONS = false
 // const SHOW_WALL_COLLISIONS = true
-const wall = (ctx: CanvasRenderingContext2D, { collisionSize, view, wall }: Props) => {
-  const points = wall.points
-  const relativePoints = points.map(point => getRelativePosByAbsPos(view, point))
+const wall = (ctx: CanvasRenderingContext2D, props: Props) => {
+  const { cameraRotation, collisionSize, view, wall } = props
+  const points = rotatePolygon(wall, cameraRotation.point, cameraRotation.angle).points
 
   if (SHOW_WALL_COLLISIONS) {
-    wallCollision(ctx, { polygon: wall, view, collisionRadius: collisionSize })
+    wallCollision(ctx, {
+      cameraRotation,
+      polygon: wall,
+      view,
+      collisionRadius: collisionSize,
+    })
   }
 
   ctx.beginPath()
-  relativePoints.forEach(point => {
-    ctx.lineTo(point.x, point.y)
+  points.forEach(point => {
+    const { x, y } = getRelativePosByAbsPos(view, point)
+    ctx.lineTo(x, y)
   })
   ctx.closePath()
   ctx.fillStyle = wall.background

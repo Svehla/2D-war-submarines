@@ -1,4 +1,4 @@
-import { Angle, pythagorC } from './mathCalc'
+import { Angle, distance, getAngleBetweenPoints, pythagorC } from './mathCalc'
 import { Line, Point } from './gameElementTypes'
 
 export type Vec = {
@@ -44,5 +44,17 @@ export const angleToUnitVec = (angle: number): Vec => {
   return {
     x: Math.cos(Angle.toRadians(angle)),
     y: Math.sin(Angle.toRadians(angle)),
+  }
+}
+
+// I should rewrite to imagine numbers for better performance optimisation
+// rotate point
+export const rotateAbsPoint = (point: Point, angle: number): Point => {
+  const dist = distance({ x: 0, y: 0 }, point)
+  const angleBetween = getAngleBetweenPoints({ x: 0, y: 0 }, point)
+  const newAngle = Angle.add(angleBetween, angle)
+  return {
+    x: Math.cos(Angle.toRadians(newAngle)) * dist,
+    y: Math.sin(Angle.toRadians(newAngle)) * dist,
   }
 }
