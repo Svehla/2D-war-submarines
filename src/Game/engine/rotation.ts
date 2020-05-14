@@ -1,42 +1,23 @@
 import { Point, Polygon, Rectangle } from './gameElementTypes'
-import { rotateAbsPoint } from './vec'
+import { addVec, rotateAbsPoint, subVec } from './vec'
 
-// TODO: add rotate point around point
+export const rotatePoint = (point: Point, rotateAround: Point, rotationAngle: number): Point => {
+  // const relCoordP = subVec(point, rotateAround)
+  // const rotatedP = rotateAbsPoint(relCoordP, rotationAngle)
+  // const shiftedP = addVec(rotatedP, rotateAround)
+  // return shiftedP
 
-export const rotatePoint = (circle: Point, rotateAround: Point, rotationAngle: number) => {
-  return {
-    ...circle,
-    // trick with pipe.. haha trololo
-    ...[circle]
-      // center should be user in the center of screen
-      .map(point => ({
-        x: point.x - rotateAround.x,
-        y: point.y - rotateAround.y,
-      }))
-      .map(point => rotateAbsPoint(point, rotationAngle))
-      .map(point => ({
-        x: point.x + rotateAround.x,
-        y: point.y + rotateAround.y,
-      }))[0],
-  }
+  // HAHA: better than pipe operator bro
+  return [point]
+    .map(point => subVec(point, rotateAround))
+    .map(relCoordP => rotateAbsPoint(relCoordP, rotationAngle))
+    .map(rotatedP => addVec(rotatedP, rotateAround))[0]
 }
 
-export const rotatePolygon = (polygon: Polygon, rotateAround: Point, rotationAngle: number) => {
-  return {
-    ...polygon,
-    points: polygon.points
-      // center should be user in the center of screen
-      .map(point => ({
-        x: point.x - rotateAround.x,
-        y: point.y - rotateAround.y,
-      }))
-      .map(point => rotateAbsPoint(point, rotationAngle))
-      .map(point => ({
-        x: point.x + rotateAround.x,
-        y: point.y + rotateAround.y,
-      })),
-  }
-}
+export const rotatePolygon = (polygon: Polygon, rotateAround: Point, rotationAngle: number) => ({
+  ...polygon,
+  points: polygon.points.map(point => rotatePoint(point, rotateAround, rotationAngle)),
+})
 
 export const rotateRectangle = (
   rect: Rectangle,

@@ -33,13 +33,15 @@ export const getLineVec = (line: Line): Vec => {
   }
 }
 
-export const shiftPoint = (point: Point, vec: Vec) => {
-  return {
-    x: point.x + vec.x,
-    y: point.y + vec.y,
-  }
-}
+export const addVec = (point: Point, vec: Vec) => ({
+  x: point.x + vec.x,
+  y: point.y + vec.y,
+})
 
+export const subVec = (point: Point, vec: Vec) => ({
+  x: point.x - vec.x,
+  y: point.y - vec.y,
+})
 export const angleToUnitVec = (angle: number): Vec => {
   return {
     x: Math.cos(Angle.toRadians(angle)),
@@ -47,8 +49,13 @@ export const angleToUnitVec = (angle: number): Vec => {
   }
 }
 
+export const getVecAngle = (vec: Vec) => Angle.getAngleBetweenPoints({ x: 0, y: 0 }, vec)
+
+export const getVecSize = (vec: Vec) => distance({ x: 0, y: 0 }, vec)
+
 // I should rewrite to imagine numbers for better performance optimisation
 // rotate point
+// TODO: is the cos/sin used correct here???
 export const rotateAbsPoint = (point: Point, angle: number): Point => {
   const dist = distance({ x: 0, y: 0 }, point)
   const angleBetween = getAngleBetweenPoints({ x: 0, y: 0 }, point)

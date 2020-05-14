@@ -1,12 +1,12 @@
 import './engine/rayCasting'
-import { Angle, View, calcNewRadarRotation, isInView } from './engine/mathCalc'
+import { Angle, View, calcNewRadarRotation, distance, isInView } from './engine/mathCalc'
 import { GameElement, GameElementType, Line, MeElementType, Radar } from './engine/gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
+import { Vec, rotateAbsPoint, subVec } from './engine/vec'
 import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'
 import { isCircleGameElementCollision } from './engine/collisions'
 import { isMobile } from '../utils'
-import { rotateAbsPoint } from './engine/vec'
 import playgroundGridView from './views/playgroundGridView'
 
 // kinda shitty code
@@ -40,7 +40,8 @@ class GameRoot {
         y: 100,
         radius: isMobile ? 60 : 60,
         background: '#559',
-        maxSpeedPerSecond: 100,
+        // TODO: what about add angle speed rotation
+        maxSpeedPerSecond: 150,
         rotationAngle: 180,
       } as MeElementType,
       playground,
@@ -48,7 +49,7 @@ class GameRoot {
       gameElements,
       authCode: '',
       volume: 0,
-      realMousePosition: {
+      mousePos: {
         x: view.width / 2,
         y: view.height / 2,
       },
@@ -138,7 +139,7 @@ class GameRoot {
   public handleMouseMove = (e: MouseEvent) => {
     const x = e.pageX
     const y = e.pageY
-    this._gameState.realMousePosition = { x, y }
+    this._gameState.mousePos = { x, y }
   }
 
   // --------------------------
@@ -159,61 +160,24 @@ class GameRoot {
    * each actions is recalculated by each frame in this function
    */
   _recalculateGameLoopState = (timeSinceLastTick: number) => {
-    const s = this._gameState
-
-    const relCenterPoint = {
-      x: this._gameState.view.width / 2,
-      y: this._gameState.view.height / 2,
-    }
-    // TODO: add speed by length from ceenter circle to mousePos
-    // rotated mouse pos absolutely from the current rotation
-    const rotatedMousePos = rotateAbsPoint(
-      // user should still go to the top of the screen
-      { x: 0, y: -400 },
-      // magic
-      Angle.sub(360, this._gameState.me.rotationAngle)
-    )
-
-    // TODO: change mousePos to direction Vec
-    // calc velocity and direction from this variable
-    const relativeDirectionVec = {
-      x: relCenterPoint.x + rotatedMousePos.x,
-      y: relCenterPoint.y + rotatedMousePos.y,
-    }
-
-    // TODO: recalculate x coord to angle
-    // TODO: add speed with clock game time
-    this._gameState.me.rotationAngle =
-      s.realMousePosition.x > this._gameState.view.width / 2 - 100 &&
-      s.realMousePosition.x < this._gameState.view.width / 2 + 100
-        ? this._gameState.me.rotationAngle
-        : s.realMousePosition.x > this._gameState.view.width / 2
-        ? Angle.sub(this._gameState.me.rotationAngle, 1)
-        : Angle.add(this._gameState.me.rotationAngle, 1)
-
-    /////
-    /////
-    /////
-    /////
-    /////
-    /////
-    // todo: does not work.....
+    // TODO: add border collisions (optimise it with addViewProperty)
+    // for more optimised calculations
     this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
       addViewProperty(item, this._gameState.view)
     )
-    // TODO: add border collisions (optimise it with addViewProperty)
-    const { x, y } = calculateNewObjPos(
-      relativeDirectionVec,
+
+    const { x, y, rotationAngle } = calculateNewObjPos(
+      this._gameState.mousePos,
       this._gameState.view,
       this._gameState.me,
-      timeSinceLastTick,
-      this._gameState.playground
+      this._gameState.playground,
+      timeSinceLastTick
     )
 
     // update static tick stuffs (radar & view & my position)
     this._gameState = {
       ...this._gameState,
-      me: { ...this._gameState.me, x, y },
+      me: { ...this._gameState.me, x, y, rotationAngle },
       view: {
         ...this._gameState.view,
         x: x - this._gameState.view.width / 2,
@@ -225,12 +189,7 @@ class GameRoot {
     this._gameState.radar.startAngle = newRadarRotationAngle
     this._gameState.radar.endAngle = Angle.add(newRadarRotationAngle, RADAR_SECTOR_ANGLE)
 
-    // borders
-    this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
-      addViewProperty(item, this._gameState.view)
-    )
-
-    // check collisions
+    // check collisions for food elements
     const updatedGameElements = this._gameState.gameElements
       // add max speed threshold around the view
       .map(item => addViewProperty(item, this._gameState.view))

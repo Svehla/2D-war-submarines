@@ -42,7 +42,7 @@ const borderGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
 
   ctx.closePath()
 
-  ctx.fillStyle = '#DDD'
+  ctx.fillStyle = '#FAFAFA'
   ctx.fill()
   ctx.strokeStyle = '#999'
   ctx.stroke()

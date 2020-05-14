@@ -1,8 +1,24 @@
-// todo: extract math to engine and logic to game
-import { Angle, View, distToSegment, distance, getElShift } from './mathCalc'
-import { Circle, GameCollisionsElement, GameElementType, Point } from './gameElementTypes'
+import { Angle, View, distancePointToLine, distance, stayInRange } from './mathCalc'
+import {
+  Circle,
+  GameCollisionsElement,
+  GameElementType,
+  MeElementType,
+  Point,
+} from './gameElementTypes'
 import { Playground } from '../gameSetup'
-import { Vec, angleToUnitVec, getLineVec, getNormalVec, shiftPoint, toUnitVec } from './vec'
+import {
+  Vec,
+  addVec,
+  angleToUnitVec,
+  getLineVec,
+  getNormalVec,
+  getVecAngle,
+  getVecSize,
+  rotateAbsPoint,
+  subVec,
+  toUnitVec,
+} from './vec'
 import { getWallCollisionElements } from './collisionsHelper'
 import { isPointArcCollision, isPointPolygonCollision } from './collisions'
 
@@ -49,12 +65,12 @@ const shiftPosByWallCollisions = (
       }
       case GameElementType.Polygon: {
         const directionVec = toUnitVec(getNormalVec(getLineVec(colEl.baseLine)))
-        const disToInnerEdge = distToSegment(newPos, colEl.baseLine)
+        const disToInnerEdge = distancePointToLine(newPos, colEl.baseLine)
         relativeShift = { directionVec, disToInnerEdge }
         break
       }
     }
-    return shiftPoint(newPos, {
+    return addVec(newPos, {
       x: relativeShift.directionVec.x * (newPos.radius - relativeShift.disToInnerEdge),
       y: relativeShift.directionVec.y * (newPos.radius - relativeShift.disToInnerEdge),
     })
@@ -74,38 +90,113 @@ const shiftPosByWallCollisions = (
   return prevPos
 }
 
-export const calculateNewObjPos = (
+const ACCELERATION_SPEED_COEFFICIENT = 40
+const getElShift = (
   directionVec: Vec,
-  view: View,
-  meElement: Circle & { maxSpeedPerSecond: number },
-  timeSinceLastTick: number,
-  playground: Playground
+  maxSpeedPerSecond: number,
+  timeSinceLastTick: number
 ): Point => {
-  // return neg or pos distance by positions of cursor
-  const { x: distanceX, y: distanceY } = getElShift(
-    directionVec,
-    view,
+  const angle = getVecAngle(directionVec)
+  const d = getVecSize(directionVec)
+  const acceleration = Math.pow(d / ACCELERATION_SPEED_COEFFICIENT, 2)
+  const maxSpeedPerInterval = maxSpeedPerSecond / (1000 / timeSinceLastTick)
+  const elementAcceleration = Math.min(acceleration, maxSpeedPerInterval)
+  const newX = Math.cos(Angle.toRadians(angle)) * elementAcceleration
+  const newY = Math.sin(Angle.toRadians(angle)) * elementAcceleration
+  return {
+    x: newX,
+    y: newY,
+  }
+}
+
+/**
+ *
+ * calculate y mouse coord
+ * TODO: add speed & clock
+ * speed is based on the mousePos
+ */
+const getElDirection = (mousePos: Point, view: View, gameRotation: number) => {
+  // TODO: add speed with clock game time
+  const centerPoint = {
+    x: view.width / 2,
+    y: view.height / 2,
+  }
+
+  const relCoords = subVec(mousePos, centerPoint)
+  const yDist = relCoords.y
+
+  const absDirVec = { x: 0, y: yDist }
+  const directionVec = rotateAbsPoint(
+    absDirVec,
+    // magic
+    Angle.sub(360, gameRotation)
+  )
+
+  return directionVec
+}
+
+/**
+ * calculate x mouse coord
+ * calculate new rotation by cursor on the rotated game
+ */
+const getNewElAngle = (
+  mousePos: Point,
+  view: View,
+  oldGameRotation: number,
+  timeSinceLastTick: number
+) => {
+  // TODO: implement timeSinceLastTick
+  const centerPoint = {
+    x: view.width / 2,
+    y: view.height / 2,
+  }
+  const relCoords = subVec(centerPoint, mousePos)
+  const xDist = relCoords.x
+  const slow_random_const = (timeSinceLastTick / 33) * 0.001
+  const maxRange = (timeSinceLastTick / 33) * 0.6
+  const limitedAngleSpeed = stayInRange(slow_random_const * xDist, maxRange)
+
+  const rotationAngle = Angle.add(oldGameRotation, limitedAngleSpeed)
+  return rotationAngle
+}
+
+export const calculateNewObjPos = (
+  mousePos: Point,
+  view: View,
+  meElement: MeElementType,
+  playground: Playground,
+  timeSinceLastTick: number
+): Point & { rotationAngle: number } => {
+  // recalculate rotation to absolute position
+  // user use mouse for manipulating of rotation
+  // next 3 lines are really complicated -> i should simplify it somehow
+  // mouse X coord to angle
+  const rotationAngle = getNewElAngle(mousePos, view, meElement.rotationAngle, timeSinceLastTick)
+  // mouse Y coord to speed (aka distance of move angel)
+  const relDirectionVec = getElDirection(mousePos, view, rotationAngle)
+  const directionShiftVec = getElShift(
+    relDirectionVec,
     meElement.maxSpeedPerSecond,
     timeSinceLastTick
   )
-  // possible shifts without borders
+
+  // possible element shift without border collision
   const newMeEl = {
-    x: meElement.x + distanceX,
-    y: meElement.y + distanceY,
+    x: meElement.x + directionShiftVec.x,
+    y: meElement.y + directionShiftVec.y,
     radius: meElement.radius,
   }
 
+  // apply walls collisions and recalculate user move
   const collidedColElements = playground.walls
     .flatMap(wall => getWallCollisionElements(wall, newMeEl.radius))
     .filter(colEl => isGameColElCollide(newMeEl, colEl))
 
-  // if (collidedColElements.length > 0) {
-  //   console.log(collidedColElements)
-  // }
   const meShiftedPoint = shiftPosByWallCollisions(meElement, newMeEl, collidedColElements)
 
   return {
     x: meShiftedPoint.x,
     y: meShiftedPoint.y,
+    rotationAngle,
   }
 }
