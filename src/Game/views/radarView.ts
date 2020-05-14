@@ -1,5 +1,5 @@
-import { Angle, View } from '../engine/mathCalc'
-import { Point, Radar } from '../engine/gameElementTypes'
+import { Angle } from '../engine/angle'
+import { Point, Radar, View } from '../engine/gameElementTypes'
 
 type Props = {
   view: View
@@ -8,7 +8,8 @@ type Props = {
   rotationPoint: Point
 }
 
-const radarView = (ctx: CanvasRenderingContext2D, { view, radar }: Props) => {
+const radarView = (ctx: CanvasRenderingContext2D, props: Props) => {
+  const { view, radar } = props
   const centerPoint = {
     x: view.width / 2,
     y: view.height / 2,

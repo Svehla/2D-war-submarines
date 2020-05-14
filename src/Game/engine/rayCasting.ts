@@ -1,6 +1,7 @@
-import { Angle, distance, findMinByKey } from './mathCalc'
+import { Angle } from './angle'
 import { Arc, Circle, GameElement, GameElementType, Line, Point, Polygon } from './gameElementTypes'
 import { RAY_COUNT } from '../gameSetup'
+import { distance, findMinByKey } from './mathCalc'
 import { getLinesFromPoints } from './line'
 import { notNullable } from '../../utils'
 
@@ -171,7 +172,6 @@ export const getRayCastCollisions = (arc: Arc, gameElements: GameElement[]) => {
               break
             }
             case GameElementType.Circle:
-              // TODO: implement circle collision behavior
               nearPoint = getNearestLineCircleCollision(rayLine, el)
               break
           }

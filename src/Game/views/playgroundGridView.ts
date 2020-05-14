@@ -1,5 +1,4 @@
-import { GameElementFood, Line, MeElementType, Radar } from '../engine/gameElementTypes'
-import { View } from '../engine/mathCalc'
+import { GameElementFood, Line, MeElementType, Radar, View } from '../engine/gameElementTypes'
 import { playground } from '../gameSetup'
 import borderGrid from './borderGridView'
 import gameElementView from './gameElementView'

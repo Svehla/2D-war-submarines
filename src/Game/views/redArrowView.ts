@@ -1,4 +1,4 @@
-import { View } from '../engine/mathCalc'
+import { View } from '../engine/gameElementTypes'
 
 type Props = {
   view: View

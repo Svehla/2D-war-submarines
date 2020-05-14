@@ -193,13 +193,13 @@ export const getLinesFromShape = (shape: string, startPoint: Point): Polygon => 
     const nextPointRelativeCoord = getNextPointsByPriority(
       get3x3MatrixAroundPoint(currPoint, shape)
     )
-    const nextPointAbsoluteCoords = nextPointRelativeCoord.map(p => ({
+    const nextPointPoints = nextPointRelativeCoord.map(p => ({
       ...p,
       x: p.x + currPoint.x - 1,
       y: p.y + currPoint.y - 1,
     }))
     // filter used points
-    const unusedPoints = nextPointAbsoluteCoords.filter(
+    const unusedPoints = nextPointPoints.filter(
       // find if point was used
       p => points.find(po => po.x === p.x && po.y === p.y) === undefined
     )

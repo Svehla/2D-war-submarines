@@ -1,5 +1,5 @@
-import { Angle, View } from '../engine/mathCalc'
-import { MeElementType } from '../engine/gameElementTypes'
+import { Angle } from '../engine/angle'
+import { MeElementType, View } from '../engine/gameElementTypes'
 import redArrowView from './redArrowView'
 
 type Props = {

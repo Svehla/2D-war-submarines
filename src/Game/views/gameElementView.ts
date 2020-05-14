@@ -1,6 +1,6 @@
-import { CameraRotation, GameElementFood, GameElementType } from '../engine/gameElementTypes'
+import { CameraRotation, GameElementFood, GameElementType, View } from '../engine/gameElementTypes'
 import { RADAR_VISIBLE_DELAY } from '../gameSetup'
-import { View, getRelativePosByAbsPos, normalizeInto01 } from '../engine/mathCalc'
+import { getRelativePosByAbsPos, normalizeInto01 } from '../engine/mathCalc'
 import { rotatePoint, rotateRectangle } from '../engine/rotation'
 
 type Props = {

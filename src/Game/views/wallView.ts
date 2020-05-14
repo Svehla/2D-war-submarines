@@ -1,5 +1,5 @@
-import { CameraRotation, Polygon } from '../engine/gameElementTypes'
-import { View, getRelativePosByAbsPos } from '../engine/mathCalc'
+import { CameraRotation, Polygon, View } from '../engine/gameElementTypes'
+import { getRelativePosByAbsPos } from '../engine/mathCalc'
 import { rotatePolygon } from '../engine/rotation'
 import wallCollision from './wallCollisionView'
 

@@ -1,5 +1,5 @@
-import { CameraRotation, Line } from '../engine/gameElementTypes'
-import { View, getRelativePosByAbsPos } from '../engine/mathCalc'
+import { CameraRotation, Line, View } from '../engine/gameElementTypes'
+import { getRelativePosByAbsPos } from '../engine/mathCalc'
 import { rotatePoint } from '../engine/rotation'
 
 type Props = {

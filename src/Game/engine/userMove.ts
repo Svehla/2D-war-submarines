@@ -1,10 +1,11 @@
-import { Angle, View, distancePointToLine, distance, stayInRange } from './mathCalc'
+import { Angle } from './angle'
 import {
   Circle,
   GameCollisionsElement,
   GameElementType,
   MeElementType,
   Point,
+  View,
 } from './gameElementTypes'
 import { Playground } from '../gameSetup'
 import {
@@ -15,10 +16,12 @@ import {
   getNormalVec,
   getVecAngle,
   getVecSize,
+  multiplyVec,
   rotateAbsPoint,
   subVec,
   toUnitVec,
 } from './vec'
+import { distance, distancePointToLine, stayInRange } from './mathCalc'
 import { getWallCollisionElements } from './collisionsHelper'
 import { isPointArcCollision, isPointPolygonCollision } from './collisions'
 
@@ -70,10 +73,11 @@ const shiftPosByWallCollisions = (
         break
       }
     }
-    return addVec(newPos, {
-      x: relativeShift.directionVec.x * (newPos.radius - relativeShift.disToInnerEdge),
-      y: relativeShift.directionVec.y * (newPos.radius - relativeShift.disToInnerEdge),
-    })
+    const shiftedVec = multiplyVec(
+      relativeShift.directionVec,
+      newPos.radius - relativeShift.disToInnerEdge
+    )
+    return addVec(newPos, shiftedVec)
   }
 
   if (gameColEl.length === 2) {

@@ -1,6 +1,6 @@
 // what about to use some library?
 // https://github.com/bmoren/p5.collide2D
-import { Angle, distance, isAngleInArcSector } from './mathCalc'
+import { Angle } from './angle'
 import {
   Arc,
   Circle,
@@ -10,6 +10,7 @@ import {
   Polygon,
   Rectangle,
 } from './gameElementTypes'
+import { distance } from './mathCalc'
 
 // https://github.com/bmoren/p5.collide2D/blob/master/p5.collide2d.js#L228
 export const isPointPolygonCollision = ({ points: vertices }: Polygon, point: Point): boolean => {
@@ -42,7 +43,7 @@ export const isPointPolygonCollision = ({ points: vertices }: Polygon, point: Po
 export const isPointArcCollision = (arc: Arc, point: Point) => {
   const arcRecAngle = Angle.getAngleBetweenPoints(arc, point)
   return (
-    isAngleInArcSector(arcRecAngle, arc.startAngle, arc.endAngle) &&
+    Angle.isAngleInArcSector(arcRecAngle, arc.startAngle, arc.endAngle) &&
     distance(arc, point) < arc.radius
   )
 }

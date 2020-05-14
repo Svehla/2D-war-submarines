@@ -1,5 +1,6 @@
-import { Angle, distance, getAngleBetweenPoints, pythagorC } from './mathCalc'
+import { Angle } from './angle'
 import { Line, Point } from './gameElementTypes'
+import { distance, pythagorC } from './mathCalc'
 
 export type Vec = {
   x: number
@@ -58,7 +59,7 @@ export const getVecSize = (vec: Vec) => distance({ x: 0, y: 0 }, vec)
 // TODO: is the cos/sin used correct here???
 export const rotateAbsPoint = (point: Point, angle: number): Point => {
   const dist = distance({ x: 0, y: 0 }, point)
-  const angleBetween = getAngleBetweenPoints({ x: 0, y: 0 }, point)
+  const angleBetween = Angle.getAngleBetweenPoints({ x: 0, y: 0 }, point)
   const newAngle = Angle.add(angleBetween, angle)
   return {
     x: Math.cos(Angle.toRadians(newAngle)) * dist,

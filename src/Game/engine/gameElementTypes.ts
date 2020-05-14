@@ -110,3 +110,5 @@ export type CameraRotation = {
   point: Point
   angle: number
 }
+
+export type View = Rectangle

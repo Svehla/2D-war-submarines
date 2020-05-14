@@ -1,7 +1,15 @@
 import './engine/rayCasting'
-import { Angle, View, calcNewRadarRotation, isInView } from './engine/mathCalc'
-import { GameElement, GameElementType, Line, MeElementType, Radar } from './engine/gameElementTypes'
+import { Angle } from './engine/angle'
+import {
+  GameElement,
+  GameElementType,
+  Line,
+  MeElementType,
+  Radar,
+  View,
+} from './engine/gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
+import { calcNewRadarRotation, isInView } from './engine/mathCalc'
 import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'
 import { isCircleGameElementCollision } from './engine/collisions'

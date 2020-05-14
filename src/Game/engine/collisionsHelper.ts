@@ -1,4 +1,4 @@
-import { Angle } from '../engine/mathCalc'
+import { Angle } from './angle'
 import { GameCollisionsElement, GameElementType, Line, Polygon } from './gameElementTypes'
 import { getLineVec, getNormalVec, multiplyVec, toUnitVec } from '../engine/vec'
 import { getLinesFromPoints, getPointsFromLines } from '../engine/line'

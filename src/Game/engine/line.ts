@@ -9,17 +9,14 @@ export const getPointsFromLines = (lines: Line[]): Point[] => {
 }
 
 export const getLinesFromPoints = (points: Point[]): Line[] => {
-  const polygonLines = points.map((point, index) => ({
-    s: {
-      x: point.x,
-      y: point.y,
-    },
+  const polygonLines = points.map((point, index) => {
     // -> connect last point with the first one
-    e: {
-      x: points[(index + 1) % points.length].x,
-      y: points[(index + 1) % points.length].y,
-    },
-  }))
+    const endPoint = points[(index + 1) % points.length]
+    return {
+      s: point,
+      e: endPoint,
+    }
+  })
   return polygonLines
 }
 

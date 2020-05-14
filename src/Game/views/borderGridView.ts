@@ -1,5 +1,5 @@
-import { CameraRotation } from '../engine/gameElementTypes'
-import { View, getRelativePosByAbsPos } from '../engine/mathCalc'
+import { CameraRotation, View } from '../engine/gameElementTypes'
+import { getRelativePosByAbsPos } from '../engine/mathCalc'
 import { playground } from '../gameSetup'
 import { rotateRectangle } from '../engine/rotation'
 // import gridImage from './img/grid.png'

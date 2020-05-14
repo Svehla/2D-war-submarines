@@ -32,5 +32,5 @@ export const rotateRectangle = (
     { x, y: y + height },
   ]
 
-  return rotatePolygon({ points: points }, rotateAround, rotationAngle)
+  return rotatePolygon({ points }, rotateAround, rotationAngle)
 }
