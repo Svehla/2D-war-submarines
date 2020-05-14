@@ -1,4 +1,4 @@
-import { Angle, pythagorC } from './mathCalc'
+import { Angle, distance, getAngleBetweenPoints, pythagorC } from './mathCalc'
 import { Line, Point } from './gameElementTypes'
 
 export type Vec = {
@@ -33,16 +33,35 @@ export const getLineVec = (line: Line): Vec => {
   }
 }
 
-export const shiftPoint = (point: Point, vec: Vec) => {
-  return {
-    x: point.x + vec.x,
-    y: point.y + vec.y,
-  }
-}
+export const addVec = (point: Point, vec: Vec) => ({
+  x: point.x + vec.x,
+  y: point.y + vec.y,
+})
 
+export const subVec = (point: Point, vec: Vec) => ({
+  x: point.x - vec.x,
+  y: point.y - vec.y,
+})
 export const angleToUnitVec = (angle: number): Vec => {
   return {
     x: Math.cos(Angle.toRadians(angle)),
     y: Math.sin(Angle.toRadians(angle)),
+  }
+}
+
+export const getVecAngle = (vec: Vec) => Angle.getAngleBetweenPoints({ x: 0, y: 0 }, vec)
+
+export const getVecSize = (vec: Vec) => distance({ x: 0, y: 0 }, vec)
+
+// I should rewrite to imagine numbers for better performance optimisation
+// rotate point
+// TODO: is the cos/sin used correct here???
+export const rotateAbsPoint = (point: Point, angle: number): Point => {
+  const dist = distance({ x: 0, y: 0 }, point)
+  const angleBetween = getAngleBetweenPoints({ x: 0, y: 0 }, point)
+  const newAngle = Angle.add(angleBetween, angle)
+  return {
+    x: Math.cos(Angle.toRadians(newAngle)) * dist,
+    y: Math.sin(Angle.toRadians(newAngle)) * dist,
   }
 }

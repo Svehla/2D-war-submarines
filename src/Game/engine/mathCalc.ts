@@ -159,33 +159,12 @@ export const distance = (a: Point, b: Point) => {
   const yDiff = a.y - b.y
   return pythagorC(xDiff, yDiff)
 }
-const ACCELERATION_SPEED_COEFFICIENT = 40
-export const getElShift = (
-  mousePos: Point,
-  view: View,
-  maxSpeedPerSecond: number,
-  timeSinceLastTick: number
-): Point => {
-  const centerMePos = {
-    x: view.width / 2,
-    y: view.height / 2,
-  }
-  const angle = Angle.getAngleBetweenPoints(centerMePos, mousePos)
-  const d = distance(mousePos, centerMePos)
-  const acceleration = Math.pow(d / ACCELERATION_SPEED_COEFFICIENT, 2)
-  const maxSpeedPerInterval = maxSpeedPerSecond / (1000 / timeSinceLastTick)
-  const elementAcceleration = Math.min(acceleration, maxSpeedPerInterval)
-  const newX = Math.cos(Angle.toRadians(angle)) * elementAcceleration
-  const newY = Math.sin(Angle.toRadians(angle)) * elementAcceleration
-  return {
-    x: newX,
-    y: newY,
-  }
-}
+
+export const stayInRange = (num: number, range: number) => Math.min(range, Math.max(-range, num))
 
 // inspiration
 // https://gist.github.com/mattdesl/47412d930dcd8cd765c871a65532ffac
-export const distToSegment = (point: Point, line: Line) => {
+export const distancePointToLine = (point: Point, line: Line) => {
   const dx = line.e.x - line.s.x
   const dy = line.e.y - line.s.y
   const l2 = dx * dx + dy * dy
@@ -197,6 +176,7 @@ export const distToSegment = (point: Point, line: Line) => {
 
   return distance(point, { x: line.s.x + t * dx, y: line.s.y + t * dy })
 }
+
 /**
  * if array has length 0 => reduce return init value (so it returns undefined as we expect)
  */

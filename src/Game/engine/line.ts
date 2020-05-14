@@ -1,5 +1,5 @@
 import { Line, Point } from './gameElementTypes'
-import { Vec } from './vec'
+import { Vec, addVec } from './vec'
 
 export const getPointsFromLines = (lines: Line[]): Point[] => {
   return lines.flatMap(line => [
@@ -23,21 +23,7 @@ export const getLinesFromPoints = (points: Point[]): Line[] => {
   return polygonLines
 }
 
-export const shiftPoint = (point: Point, vec: Vec) => ({
-  x: point.x + vec.x,
-  y: point.y + vec.y,
+export const shiftLine = (line: Line, vec: Vec) => ({
+  s: addVec(line.s, vec),
+  e: addVec(line.e, vec),
 })
-
-// todo: reimplement via shiftPoint + change line structur
-export const shiftLine = (line: Line, vec: Vec) => {
-  return {
-    s: {
-      x: line.s.x + vec.x,
-      y: line.s.y + vec.y,
-    },
-    e: {
-      x: line.e.x + vec.x,
-      y: line.e.y + vec.y,
-    },
-  }
-}

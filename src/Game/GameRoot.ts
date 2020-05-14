@@ -6,7 +6,7 @@ import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'
 import { isCircleGameElementCollision } from './engine/collisions'
 import { isMobile } from '../utils'
-import playgroundGrid from './views/playgroundView'
+import playgroundGridView from './views/playgroundGridView'
 
 // kinda shitty code
 const addViewProperty = <T extends GameElement>(item: T, view: View): T => ({
@@ -39,14 +39,16 @@ class GameRoot {
         y: 100,
         radius: isMobile ? 60 : 60,
         background: '#559',
-        maxSpeedPerSecond: 200,
+        // TODO: what about add angle speed rotation
+        maxSpeedPerSecond: 150,
+        rotationAngle: 180,
       } as MeElementType,
       playground,
       view: getView(),
       gameElements,
       authCode: '',
       volume: 0,
-      mousePosition: {
+      mousePos: {
         x: view.width / 2,
         y: view.height / 2,
       },
@@ -105,26 +107,12 @@ class GameRoot {
 
   // use for desktop support
   public handleMouseMove = (e: MouseEvent) => {
-    const x = e.pageX
-    const y = e.pageY
-    this._gameState.mousePosition = { x, y }
+    this._gameState.mousePos = { x: e.pageX, y: e.pageY }
   }
 
-  // TODO: add mobile support
   public handlePlaygroundMove = (e: any) => {
     e.preventDefault()
-    // TODO: add mobile support
-    // const touch = e.touches[0]
-    // const mouseEvent = new MouseEvent('mousemove', {
-    //   clientX: touch.clientX,
-    //   clientY: touch.clientY,
-    // })
-    // this._canvasRef.current?.dispatchEvent(mouseEvent)
-    // @ts-ignore
-    // const { x, y } = e.target.getStage().getPointerPosition()
-    // this._gameState.mousePosition = { x, y }
   }
-
   // --------------------------
   // --------- others --------
   // --------------------------
@@ -133,7 +121,9 @@ class GameRoot {
     this._highResTimestamp = highResTimestamp
     this._recalculateGameLoopState(timeSinceLastTick)
     this._draw()
+    // setTimeout(() => {
     this.frameId = requestAnimationFrame(this._tick)
+    // }, 200)
   }
 
   /**
@@ -141,23 +131,23 @@ class GameRoot {
    * each actions is recalculated by each frame in this function
    */
   _recalculateGameLoopState = (timeSinceLastTick: number) => {
-    // todo: does not work.....
+    // for more optimised calculations
     this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
       addViewProperty(item, this._gameState.view)
     )
-    // TODO: add border collisions (optimise it with addViewProperty)
-    const { x, y } = calculateNewObjPos(
-      this._gameState.mousePosition,
+
+    const { x, y, rotationAngle } = calculateNewObjPos(
+      this._gameState.mousePos,
       this._gameState.view,
       this._gameState.me,
-      timeSinceLastTick,
-      this._gameState.playground
+      this._gameState.playground,
+      timeSinceLastTick
     )
 
     // update static tick stuffs (radar & view & my position)
     this._gameState = {
       ...this._gameState,
-      me: { ...this._gameState.me, x, y },
+      me: { ...this._gameState.me, x, y, rotationAngle },
       view: {
         ...this._gameState.view,
         x: x - this._gameState.view.width / 2,
@@ -169,12 +159,7 @@ class GameRoot {
     this._gameState.radar.startAngle = newRadarRotationAngle
     this._gameState.radar.endAngle = Angle.add(newRadarRotationAngle, RADAR_SECTOR_ANGLE)
 
-    // borders
-    this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
-      addViewProperty(item, this._gameState.view)
-    )
-
-    // check collisions
+    // check collisions with food elements
     const updatedGameElements = this._gameState.gameElements
       // add max speed threshold around the view
       .map(item => addViewProperty(item, this._gameState.view))
@@ -229,12 +214,11 @@ class GameRoot {
 
     const s = this._gameState
 
-    playgroundGrid(this._ctx, {
+    playgroundGridView(this._ctx, {
       view: s.view,
       gameElements: s.gameElements,
       me: s.me,
       radar: s.radar,
-      mousePos: s.mousePosition,
       rayCastRays: s.rayCastRays,
       playground: s.playground,
     })

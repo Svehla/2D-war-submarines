@@ -1,47 +1,63 @@
+import { CameraRotation } from '../engine/gameElementTypes'
 import { View, getRelativePosByAbsPos } from '../engine/mathCalc'
 import { playground } from '../gameSetup'
-import gridImage from './img/grid.png'
-import gridReverseImage from './img/grid-reverse.png'
-
-const playgroundCoords = {
-  x: 0,
-  y: 0,
-}
+import { rotateRectangle } from '../engine/rotation'
+// import gridImage from './img/grid.png'
+// import gridReverseImage from './img/grid-reverse.png'
 
 type Props = {
   view: View
-  isDark: boolean
+  cameraRotation: CameraRotation
 }
 
-// shitty load
-// TODO: fix it with local state for loading per instance
-let lightImageLoaded = false
-const lightImg = new Image()
-lightImg.src = gridImage
-lightImg.onload = function () {
-  lightImageLoaded = true
-}
-let darkImageLoaded = false
-const darkImg = new Image()
-darkImg.src = gridReverseImage
-darkImg.onload = function () {
-  darkImageLoaded = true
-}
-
+// // shitty load
+// // TODO: fix it with local state for loading per instance
+// let lightImageLoaded = false
+// const lightImg = new Image()
+// lightImg.src = gridImage
+// lightImg.onload = function () {
+//   lightImageLoaded = true
+// }
 // singleton... shitty behavior coz of img
 // fill bg with pattern instead of img???
-const borderGrid = (ctx: CanvasRenderingContext2D, { view, isDark }: Props) => {
-  const { x, y } = getRelativePosByAbsPos(view, playgroundCoords)
+const borderGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
+  const { cameraRotation, view } = props
 
-  // make backend looks like static image and move elements and camera on in
-  ctx.translate(x, y)
-  // todo: draw pattern instead of load img
-  if (!lightImageLoaded || !darkImageLoaded) return
-  const pattern = ctx.createPattern(isDark ? darkImg : lightImg, 'repeat')
-  ctx.fillStyle = pattern!
-  ctx.fillRect(0, 0, playground.width, playground.height)
-  // return canvas translate back to previous value
-  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  const poly = rotateRectangle(
+    {
+      x: 0,
+      y: 0,
+      width: playground.width,
+      height: playground.height,
+    },
+    cameraRotation.point,
+    cameraRotation.angle
+  )
+
+  ctx.beginPath()
+  poly.points.forEach(point => {
+    const { x, y } = getRelativePosByAbsPos(view, point)
+    ctx.lineTo(x, y)
+  })
+
+  ctx.closePath()
+
+  ctx.fillStyle = '#FAFAFA'
+  ctx.fill()
+  ctx.strokeStyle = '#999'
+  ctx.stroke()
+  ctx.closePath()
+
+  // ## bg image
+  // // make backend looks like static image and move elements and camera on in
+  // ctx.translate(x, y)
+  // // todo: draw pattern instead of load img
+  // if (!lightImageLoaded || !darkImageLoaded) return
+  // const pattern = ctx.createPattern(lightImg, 'repeat')
+  // ctx.fillStyle = pattern!
+  // ctx.fillRect(0, 0, playground.width, playground.height)
+  // // return canvas translate back to previous value
+  // ctx.setTransform(1, 0, 0, 1, 0, 0)
 }
 
 export default borderGrid

@@ -1,19 +1,22 @@
 import { Angle, View, getRelativePosByAbsPos } from '../engine/mathCalc'
-import { GameElementType, Polygon } from '../engine/gameElementTypes'
+import { CameraRotation, GameElementType, Polygon } from '../engine/gameElementTypes'
 import { getWallCollisionElements } from '../engine/collisionsHelper'
+import { rotatePolygon } from '../engine/rotation'
 
 type Props = {
   view: View
   polygon: Polygon
   collisionRadius: number
+  cameraRotation: CameraRotation
 }
 
 const wallCollision = (ctx: CanvasRenderingContext2D, props: Props) => {
-  const { view, collisionRadius, polygon } = props
-  const points = polygon.points
-  const relativePoints = points.map(point => getRelativePosByAbsPos(view, point))
+  const { view, collisionRadius, polygon, cameraRotation } = props
 
-  const colElements = getWallCollisionElements({ points: relativePoints }, collisionRadius)
+  const colElements = getWallCollisionElements(
+    rotatePolygon(polygon, cameraRotation.point, cameraRotation.angle),
+    collisionRadius
+  )
 
   colElements.forEach(el => {
     switch (el.type) {
@@ -21,7 +24,8 @@ const wallCollision = (ctx: CanvasRenderingContext2D, props: Props) => {
         ctx.beginPath()
 
         el.points.forEach(point => {
-          ctx.lineTo(point.x, point.y)
+          const { x, y } = getRelativePosByAbsPos(view, point)
+          ctx.lineTo(x, y)
         })
         ctx.fillStyle = 'rgba(0,0,0,0.3)'
         ctx.fill()
@@ -31,8 +35,9 @@ const wallCollision = (ctx: CanvasRenderingContext2D, props: Props) => {
       }
       case GameElementType.Arc: {
         ctx.beginPath()
-        ctx.arc(el.x, el.y, el.radius, Angle.toRadians(el.startAngle), Angle.toRadians(el.endAngle))
-        ctx.lineTo(el.x, el.y)
+        const { x, y } = getRelativePosByAbsPos(view, el)
+        ctx.arc(x, y, el.radius, Angle.toRadians(el.startAngle), Angle.toRadians(el.endAngle))
+        ctx.lineTo(x, y)
         ctx.fillStyle = 'rgba(0,0,0,0.3)'
         ctx.fill()
         ctx.closePath()
