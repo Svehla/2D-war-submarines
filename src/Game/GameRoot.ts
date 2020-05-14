@@ -1,8 +1,7 @@
 import './engine/rayCasting'
-import { Angle, View, calcNewRadarRotation, distance, isInView } from './engine/mathCalc'
+import { Angle, View, calcNewRadarRotation, isInView } from './engine/mathCalc'
 import { GameElement, GameElementType, Line, MeElementType, Radar } from './engine/gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
-import { Vec, rotateAbsPoint, subVec } from './engine/vec'
 import { calculateNewObjPos } from './engine/userMove'
 import { getRayCastCollisions } from './engine/rayCasting'
 import { isCircleGameElementCollision } from './engine/collisions'
@@ -53,11 +52,6 @@ class GameRoot {
         x: view.width / 2,
         y: view.height / 2,
       },
-      // for calc of velocity and direction
-      // mousePosition: {
-      //   x: view.width / 2,
-      //   y: view.height / 2,
-      // },
       // speed of radar is const by timestamp
       // ray cast is calculated from radar view
       radar: {
@@ -95,30 +89,6 @@ class GameRoot {
     this._canvasRef.height = this._gameState.view.height
 
     this._ctx = this._canvasRef.getContext('2d')!
-
-    // keyboard game control
-    // document.addEventListener('keydown', e => {
-    //   if (e.keyCode === 38) {
-    //     // up arrow
-    //     // console.log('up arrow')
-    //     this._gameState.me.maxSpeedPerSecond += 10
-    //   }
-    //   if (e.keyCode === 40) {
-    //     // down arrow
-    //     // console.log('down arrow')
-    //     this._gameState.me.maxSpeedPerSecond -= 10
-    //   }
-    //   if (e.keyCode === 37) {
-    //     // left arrow
-    //     // console.log('left arrow')
-    //     this._gameState.me.rotationAngle += 2
-    //   }
-    //   if (e.keyCode === 39) {
-    //     // right arrow
-    //     // console.log('right arrow')
-    //     this._gameState.me.rotationAngle -= 2
-    //   }
-    // })
   }
 
   // --------------------------
@@ -137,11 +107,12 @@ class GameRoot {
 
   // use for desktop support
   public handleMouseMove = (e: MouseEvent) => {
-    const x = e.pageX
-    const y = e.pageY
-    this._gameState.mousePos = { x, y }
+    this._gameState.mousePos = { x: e.pageX, y: e.pageY }
   }
 
+  public handlePlaygroundMove = (e: any) => {
+    e.preventDefault()
+  }
   // --------------------------
   // --------- others --------
   // --------------------------
@@ -160,7 +131,6 @@ class GameRoot {
    * each actions is recalculated by each frame in this function
    */
   _recalculateGameLoopState = (timeSinceLastTick: number) => {
-    // TODO: add border collisions (optimise it with addViewProperty)
     // for more optimised calculations
     this._gameState.playground.walls = this._gameState.playground.walls.map(item =>
       addViewProperty(item, this._gameState.view)
@@ -189,7 +159,7 @@ class GameRoot {
     this._gameState.radar.startAngle = newRadarRotationAngle
     this._gameState.radar.endAngle = Angle.add(newRadarRotationAngle, RADAR_SECTOR_ANGLE)
 
-    // check collisions for food elements
+    // check collisions with food elements
     const updatedGameElements = this._gameState.gameElements
       // add max speed threshold around the view
       .map(item => addViewProperty(item, this._gameState.view))
