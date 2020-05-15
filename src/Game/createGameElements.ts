@@ -57,18 +57,16 @@ export const createGameFoodElement = (
   }
   switch (sharedProps.type) {
     case GameElementType.Rectangle:
-      // @ts-ignore
       return {
         ...sharedProps,
         height: height ?? getRandomWidth() * 4,
         width: width ?? getRandomWidth() * 4,
-      }
+      } as GameElementFood
     case GameElementType.Circle:
-      // @ts-ignore
       return {
         ...sharedProps,
         radius: radius ?? getRandomWidth(),
-      }
+      } as GameElementFood
   }
 }
 

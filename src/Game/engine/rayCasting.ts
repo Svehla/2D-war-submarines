@@ -94,15 +94,11 @@ const collideLineCircle = (line: Line, circle: Circle): LineCircleCol => {
 }
 
 const getNearestLineCircleCollision = (line: Line, circle: Circle) => {
-  const startPoint = {
-    x: line.s.x,
-    y: line.s.y,
-  }
   const collisions = collideLineCircle(line, circle)
     .flat()
     .map(point => ({
       point,
-      distance: distance(startPoint, point),
+      distance: distance(line.s, point),
     }))
 
   return findMinByKey(collisions, 'distance')
@@ -111,16 +107,12 @@ const getNearestLineCircleCollision = (line: Line, circle: Circle) => {
 const getNearestLinePolygonCollision = (line: Line, polygon: Polygon) => {
   const polygonLines = getLinesFromPoints(polygon.points)
 
-  const startPoint = {
-    x: line.s.x,
-    y: line.s.y,
-  }
   const collisionDistances = polygonLines
     .map(pLine => collideLineLine(line, pLine))
     .filter(notNullable)
     .map(p => ({
       point: p,
-      distance: distance(startPoint, p),
+      distance: distance(line.s, p),
     }))
 
   return findMinByKey(collisionDistances, 'distance')
@@ -187,7 +179,6 @@ export const getRayCastCollisions = (arc: Arc, gameElements: GameElement[]) => {
       const shortestDistance = findMinByKey(rayElCollisions, 'distance')
 
       // this could happen when collision array is empty
-      // if (rayElCollisions.length === 0) {
       if (!shortestDistance) {
         return {
           collisionId: undefined,

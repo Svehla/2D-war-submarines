@@ -40,7 +40,6 @@ export const getWallCollisionElements = (
   const cornerLines = getLinesFromPoints(shiftedLines).filter((_, i) => 0 === i % 2)
 
   // for each point -> there is corner and polygon with collisions
-  // @ts-ignore
   return points.flatMap((point, index) => {
     const line = cornerLines[index]
     return [
