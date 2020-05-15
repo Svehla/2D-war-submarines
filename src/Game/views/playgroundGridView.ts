@@ -1,9 +1,18 @@
-import { GameElementFood, Line, MeElementType, Radar, View } from '../engine/gameElementTypes'
+import {
+  GameElementFood,
+  GameElementRocket,
+  Line,
+  MeElementType,
+  Radar,
+  View,
+} from '../engine/gameElementTypes'
 import { playground } from '../gameSetup'
 import borderGrid from './borderGridView'
+import compassView from './compassView'
 import gameElementView from './gameElementView'
 import meView from './meView'
 import rayCastView from './rayCastView'
+import rocketView from './rocketView'
 import wall from './wallView'
 
 type Props = {
@@ -13,10 +22,11 @@ type Props = {
   radar: Radar
   rayCastRays: Line[]
   playground: typeof playground
+  rockets: GameElementRocket[]
 }
 
 const playgroundGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
-  const { view, gameElements, me, rayCastRays, playground } = props
+  const { view, gameElements, me, rockets, rayCastRays, playground } = props
   const { rotationAngle } = me
   const rotationPoint = { x: me.x, y: me.y }
 
@@ -43,6 +53,14 @@ const playgroundGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
       wall(ctx, { cameraRotation, collisionSize: me.radius, view, wall: wallEl })
   )
 
+  rockets.forEach(
+    rocketElement =>
+      // rocketElement.visibleInView &&
+      rocketElement.seenByRadar > 0 &&
+      // !rocketElement.deleted &&
+      rocketView(ctx, { cameraRotation, rocket: rocketElement, view })
+  )
+
   gameElements.forEach(
     gameElement =>
       gameElement.visibleInView &&
@@ -50,6 +68,7 @@ const playgroundGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
       !gameElement.deleted &&
       gameElementView(ctx, { cameraRotation, view, element: gameElement })
   )
+  compassView(ctx, { cameraRotation, view })
 }
 
 export default playgroundGrid

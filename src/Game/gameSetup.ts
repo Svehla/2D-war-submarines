@@ -53,7 +53,7 @@ export const RAY_COUNT = 50
 // export const RADAR_LOOP_SPEED = 15000
 // export const RADAR_LOOP_SPEED = 2000
 export const RADAR_LOOP_SPEED = 1000
-export const RADAR_VISIBLE_DELAY = RADAR_LOOP_SPEED / 2 // ms
+export const RADAR_VISIBLE_DELAY = RADAR_LOOP_SPEED / 4 // ms
 
 const myPolygon = getLinesFromShape(shape1, {
   x: 0,

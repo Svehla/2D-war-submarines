@@ -27,12 +27,10 @@ export const toUnitVec = (Vec: { x: number; y: number }) => {
   }
 }
 
-export const getLineVec = (line: Line): Vec => {
-  return {
-    y: line.e.y - line.s.y,
-    x: line.e.x - line.s.x,
-  }
-}
+export const getLineVec = (line: Line): Vec => ({
+  y: line.e.y - line.s.y,
+  x: line.e.x - line.s.x,
+})
 
 export const addVec = (point: Point, vec: Vec) => ({
   x: point.x + vec.x,

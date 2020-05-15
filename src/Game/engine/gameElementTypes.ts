@@ -3,6 +3,9 @@
 // primarily used for engine calculations
 // just math stuffs
 // refactor file system
+
+import { Vec } from './vec'
+
 // ---------------------------------------------------------------
 export type Arc = {
   x: number
@@ -90,6 +93,16 @@ export type GameElementFood =
         type: GameElementType.Circle
       })
 
+export type GameElementRocket = Circle &
+  GameElementProps & {
+    type: GameElementType.Circle
+    // px per sec
+    secSpeed: number
+    // unitVec
+    direction: Vec
+    seenByRadar: number
+  }
+
 // border is physics element viewed in the screen which works like a wall for the user
 export type GameElementBorder = Polygon &
   GameElementProps & {
@@ -100,11 +113,11 @@ export type MeElementType = Circle & {
   type: GameElementType.Circle
   radius: number
   background: string
-  maxSpeedPerSecond: number
+  maxSecSpeed: number
   rotationAngle: number
 }
 
-export type GameElement = GameElementFood | GameElementBorder
+export type GameElement = GameElementFood | GameElementBorder | GameElementRocket
 
 export type CameraRotation = {
   point: Point

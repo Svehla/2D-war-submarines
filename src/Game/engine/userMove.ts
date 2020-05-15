@@ -95,15 +95,11 @@ const shiftPosByWallCollisions = (
 }
 
 const ACCELERATION_SPEED_COEFFICIENT = 40
-const getElShift = (
-  directionVec: Vec,
-  maxSpeedPerSecond: number,
-  timeSinceLastTick: number
-): Point => {
+const getElShift = (directionVec: Vec, maxSecSpeed: number, timeSinceLastTick: number): Point => {
   const angle = getVecAngle(directionVec)
   const d = getVecSize(directionVec)
   const acceleration = Math.pow(d / ACCELERATION_SPEED_COEFFICIENT, 2)
-  const maxSpeedPerInterval = maxSpeedPerSecond / (1000 / timeSinceLastTick)
+  const maxSpeedPerInterval = maxSecSpeed / (1000 / timeSinceLastTick)
   const elementAcceleration = Math.min(acceleration, maxSpeedPerInterval)
   const newX = Math.cos(Angle.toRadians(angle)) * elementAcceleration
   const newY = Math.sin(Angle.toRadians(angle)) * elementAcceleration
@@ -155,10 +151,9 @@ const getNewElAngle = (
     y: view.height / 2,
   }
   const relCoords = subVec(centerPoint, mousePos)
-  const xDist = relCoords.x
+  const xDist = stayInRange(relCoords.x, 400)
   const slow_random_const = (timeSinceLastTick / 33) * 0.001
-  const maxRange = (timeSinceLastTick / 33) * 0.6
-  const limitedAngleSpeed = stayInRange(slow_random_const * xDist, maxRange)
+  const limitedAngleSpeed = slow_random_const * xDist
 
   const rotationAngle = Angle.add(oldGameRotation, limitedAngleSpeed)
   return rotationAngle
@@ -178,11 +173,7 @@ export const calculateNewObjPos = (
   const rotationAngle = getNewElAngle(mousePos, view, meElement.rotationAngle, timeSinceLastTick)
   // mouse Y coord to speed (aka distance of move angel)
   const relDirectionVec = getElDirection(mousePos, view, rotationAngle)
-  const directionShiftVec = getElShift(
-    relDirectionVec,
-    meElement.maxSpeedPerSecond,
-    timeSinceLastTick
-  )
+  const directionShiftVec = getElShift(relDirectionVec, meElement.maxSecSpeed, timeSinceLastTick)
 
   // possible element shift without border collision
   const newMeEl = {

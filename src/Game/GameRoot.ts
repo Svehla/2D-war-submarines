@@ -2,6 +2,7 @@ import './engine/rayCasting'
 import { Angle } from './engine/angle'
 import {
   GameElement,
+  GameElementRocket,
   GameElementType,
   Line,
   MeElementType,
@@ -10,10 +11,13 @@ import {
 } from './engine/gameElementTypes'
 import { RADAR_VISIBLE_DELAY, gameElements, getView, playground } from './gameSetup'
 import { calcNewRadarRotation, isInView } from './engine/mathCalc'
+import { calcNewRocketsPos } from './engine/rocketMove'
 import { calculateNewObjPos } from './engine/userMove'
+import { createGameRocketElement } from './createGameElements'
 import { getRayCastCollisions } from './engine/rayCasting'
 import { isCircleGameElementCollision } from './engine/collisions'
 import { isMobile } from '../utils'
+import { multiplyVec, subVec } from './engine/vec'
 import playgroundGridView from './views/playgroundGridView'
 
 // kinda shitty code
@@ -44,12 +48,12 @@ class GameRoot {
       me: {
         type: GameElementType.Circle,
         x: 100,
-        y: 100,
+        y: 1500,
         radius: isMobile ? 60 : 60,
         background: '#559',
         // TODO: what about add angle speed rotation
-        maxSpeedPerSecond: 150,
-        rotationAngle: 180,
+        maxSecSpeed: 150,
+        rotationAngle: 0,
       } as MeElementType,
       playground,
       view: getView(),
@@ -60,13 +64,14 @@ class GameRoot {
         x: view.width / 2,
         y: view.height / 2,
       },
+      rockets: [] as GameElementRocket[],
       // speed of radar is const by timestamp
       // ray cast is calculated from radar view
       radar: {
         // center coordination
         startAngle: 0,
         endAngle: RADAR_SECTOR_ANGLE,
-        radius: 480,
+        radius: 700,
       } as Radar,
       rayCastRays: [] as Line[],
     }
@@ -97,6 +102,8 @@ class GameRoot {
     this._canvasRef.height = this._gameState.view.height
 
     this._ctx = this._canvasRef.getContext('2d')!
+    // todo: move it to react part
+    window.addEventListener('click', this.handleMouseClick)
   }
 
   // --------------------------
@@ -113,14 +120,36 @@ class GameRoot {
     this._canvasRef.height = this._gameState.view.height
   }
 
+  public handleMouseClick = (e: MouseEvent) => {
+    this._addGameRocket()
+  }
+
   // use for desktop support
   public handleMouseMove = (e: MouseEvent) => {
     this._gameState.mousePos = { x: e.pageX, y: e.pageY }
   }
 
+  _addGameRocket = () => {
+    const directionVec = {
+      x: Math.sin(Angle.toRadians(this._gameState.me.rotationAngle)),
+      y: Math.cos(Angle.toRadians(this._gameState.me.rotationAngle)),
+    }
+    const pos = subVec(this._gameState.me, multiplyVec(directionVec, this._gameState.me.radius))
+    const newRocket = createGameRocketElement({
+      background: 'blue',
+      x: pos.x,
+      y: pos.y,
+      // shitty inconsistent code
+      direction: directionVec,
+    })
+
+    this._gameState.rockets.push(newRocket)
+  }
+
   public handlePlaygroundMove = (e: any) => {
     e.preventDefault()
   }
+
   // --------------------------
   // --------- others --------
   // --------------------------
@@ -131,7 +160,7 @@ class GameRoot {
     this._draw()
     // setTimeout(() => {
     this.frameId = requestAnimationFrame(this._tick)
-    // }, 200)
+    // }, 500)
   }
 
   /**
@@ -155,13 +184,19 @@ class GameRoot {
     // update static tick stuffs (radar & view & my position)
     this._gameState = {
       ...this._gameState,
+      // me: { ...this._gameState.me, x, y },
       me: { ...this._gameState.me, x, y, rotationAngle },
       view: {
         ...this._gameState.view,
+        // shift view by user move
         x: x - this._gameState.view.width / 2,
         y: y - this._gameState.view.height / 2,
       },
     }
+
+    // rockets
+    const rockets = calcNewRocketsPos(this._gameState.rockets, timeSinceLastTick)
+    this._gameState.rockets = rockets
 
     const newRadarRotationAngle = calcNewRadarRotation()
     this._gameState.radar.startAngle = newRadarRotationAngle
@@ -183,6 +218,12 @@ class GameRoot {
         }
         return item
       })
+
+    this._gameState.rockets = this._gameState.rockets.map(item => ({
+      ...item,
+      seenByRadar: item.seenByRadar > 0 ? item.seenByRadar - timeSinceLastTick : 0,
+    }))
+
     this._gameState.gameElements = updatedGameElements.map(item => ({
       ...item,
       seenByRadar: item.seenByRadar > 0 ? item.seenByRadar - timeSinceLastTick : 0,
@@ -192,6 +233,11 @@ class GameRoot {
       e => e.visibleInView && !e.deleted
     )
 
+    const elementsToRayCol = [
+      ...visibleGameElements,
+      ...this._gameState.playground.walls,
+      ...this._gameState.rockets,
+    ]
     const rayCastCollisions = getRayCastCollisions(
       {
         x: this._gameState.me.x,
@@ -200,13 +246,15 @@ class GameRoot {
         startAngle: this._gameState.radar.startAngle,
         endAngle: this._gameState.radar.endAngle,
       },
-      [...visibleGameElements, ...this._gameState.playground.walls]
+      elementsToRayCol
     )
 
     // make radar elements collisions visible
     rayCastCollisions.forEach(r => {
       const id = r.collisionId
-      const el = this._gameState.gameElements.find(({ id: elId }) => elId === id)
+      const el = [...visibleGameElements, ...this._gameState.rockets].find(
+        ({ id: elId }) => elId === id
+      )
       if (el) {
         el.seenByRadar = RADAR_VISIBLE_DELAY
       }
@@ -229,6 +277,7 @@ class GameRoot {
       radar: s.radar,
       rayCastRays: s.rayCastRays,
       playground: s.playground,
+      rockets: s.rockets,
     })
   }
 }

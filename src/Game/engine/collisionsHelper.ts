@@ -58,22 +58,10 @@ export const getWallCollisionElements = (
         // todo: should be read only -> coz of duplicit definition (or add proper method for getting normal Vec)
         baseLine: polygonLines[index],
         points: [
-          {
-            x: shiftedCollisionsLines[index].s.x,
-            y: shiftedCollisionsLines[index].s.y,
-          },
-          {
-            x: shiftedCollisionsLines[index].e.x,
-            y: shiftedCollisionsLines[index].e.y,
-          },
-          {
-            x: polygonLines[index].e.x,
-            y: polygonLines[index].e.y,
-          },
-          {
-            x: polygonLines[index].s.x,
-            y: polygonLines[index].s.y,
-          },
+          shiftedCollisionsLines[index].s,
+          shiftedCollisionsLines[index].e,
+          polygonLines[index].e,
+          polygonLines[index].s,
         ],
       },
     ]
