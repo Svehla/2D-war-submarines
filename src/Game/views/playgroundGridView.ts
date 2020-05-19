@@ -23,10 +23,11 @@ type Props = {
   rayCastRays: Line[]
   playground: typeof playground
   rockets: GameElementRocket[]
+  camera: { angle: number }
 }
 
 const playgroundGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
-  const { view, gameElements, me, rockets, rayCastRays, playground } = props
+  const { view, camera, gameElements, me, rockets, rayCastRays, playground } = props
   const { rotationAngle } = me
   const rotationPoint = { x: me.x, y: me.y }
 
@@ -36,7 +37,8 @@ const playgroundGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
   // rotation view
   const cameraRotation = {
     point: rotationPoint,
-    angle: rotationAngle,
+    angle: camera.angle,
+    // angle: rotationAngle,
   }
 
   borderGrid(ctx, {
@@ -44,8 +46,8 @@ const playgroundGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
     cameraRotation,
   })
 
-  meView(ctx, { view, me })
-  rayCastView(ctx, { cameraRotation, view, rays: rayCastRays })
+  meView(ctx, { cameraRotation, view, me })
+  // rayCastView(ctx, { cameraRotation, view, rays: rayCastRays })
 
   playground.walls.forEach(
     wallEl =>
@@ -61,13 +63,14 @@ const playgroundGrid = (ctx: CanvasRenderingContext2D, props: Props) => {
       rocketView(ctx, { cameraRotation, rocket: rocketElement, view })
   )
 
-  gameElements.forEach(
-    gameElement =>
-      gameElement.visibleInView &&
-      gameElement.seenByRadar > 0 &&
-      !gameElement.deleted &&
-      gameElementView(ctx, { cameraRotation, view, element: gameElement })
-  )
+  // gameElements.forEach(
+  //   gameElement =>
+  //     gameElement.visibleInView &&
+  //     gameElement.seenByRadar > 0 &&
+  //     !gameElement.deleted &&
+  //     gameElementView(ctx, { cameraRotation, view, element: gameElement })
+  // )
+
   compassView(ctx, { cameraRotation, view })
 }
 

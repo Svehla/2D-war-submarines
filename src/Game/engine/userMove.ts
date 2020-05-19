@@ -143,13 +143,20 @@ const getNewElAngle = (
   mousePos: Point,
   view: View,
   oldGameRotation: number,
-  timeSinceLastTick: number
+  timeSinceLastTick: number,
+  cameraAngle: number
 ) => {
   // TODO: implement timeSinceLastTick
   const centerPoint = {
     x: view.width / 2,
     y: view.height / 2,
   }
+  // todo: add rotated camera
+
+  // return Angle.getAngleBetweenPoints(centerPoint, mousePos)
+  const mouseCenterAngle = Angle.getAngleBetweenPoints(centerPoint, mousePos)
+  return Angle.sub(mouseCenterAngle, cameraAngle)
+
   const relCoords = subVec(centerPoint, mousePos)
   const xDist = stayInRange(relCoords.x, 400)
   const slow_random_const = (timeSinceLastTick / 33) * 0.001
@@ -164,15 +171,27 @@ export const calculateNewObjPos = (
   view: View,
   meElement: MeElementType,
   playground: Playground,
-  timeSinceLastTick: number
+  timeSinceLastTick: number,
+  cameraAngle: number
 ): Point & { rotationAngle: number } => {
   // recalculate rotation to absolute position
   // user use mouse for manipulating of rotation
   // next 3 lines are really complicated -> i should simplify it somehow
   // mouse X coord to angle
-  const rotationAngle = getNewElAngle(mousePos, view, meElement.rotationAngle, timeSinceLastTick)
+  const rotationAngle = getNewElAngle(
+    mousePos,
+    view,
+    meElement.rotationAngle,
+    timeSinceLastTick,
+    cameraAngle
+  )
   // mouse Y coord to speed (aka distance of move angel)
-  const relDirectionVec = getElDirection(mousePos, view, rotationAngle)
+  const speedPerSec = 100
+  const relDirectionVec = {
+    x: Math.cos(Angle.toRadians(rotationAngle)) * 100,
+    y: Math.sin(Angle.toRadians(rotationAngle)) * 100,
+  }
+  // const relDirectionVec = getElDirection(mousePos, view, rotationAngle)
   const directionShiftVec = getElShift(relDirectionVec, meElement.maxSecSpeed, timeSinceLastTick)
 
   // possible element shift without border collision

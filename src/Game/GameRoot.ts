@@ -74,6 +74,9 @@ class GameRoot {
         radius: 700,
       } as Radar,
       rayCastRays: [] as Line[],
+      camera: {
+        angle: 45,
+      },
     }
   }
 
@@ -131,8 +134,8 @@ class GameRoot {
 
   _addGameRocket = () => {
     const directionVec = {
-      x: Math.sin(Angle.toRadians(this._gameState.me.rotationAngle)),
-      y: Math.cos(Angle.toRadians(this._gameState.me.rotationAngle)),
+      x: Math.cos(Angle.toRadians(this._gameState.me.rotationAngle)),
+      y: Math.sin(Angle.toRadians(this._gameState.me.rotationAngle)),
     }
     const pos = subVec(this._gameState.me, multiplyVec(directionVec, this._gameState.me.radius))
     const newRocket = createGameRocketElement({
@@ -178,7 +181,8 @@ class GameRoot {
       this._gameState.view,
       this._gameState.me,
       this._gameState.playground,
-      timeSinceLastTick
+      timeSinceLastTick,
+      this._gameState.camera.angle
     )
 
     // update static tick stuffs (radar & view & my position)
@@ -192,6 +196,35 @@ class GameRoot {
         x: x - this._gameState.view.width / 2,
         y: y - this._gameState.view.height / 2,
       },
+    }
+
+    // camera
+    // const an = Angle.getAngleBetweenPoints(
+    //   {
+    //     x: this._gameState.view.width / 2,
+    //     // upper vector for camera fixing position
+    //     y: this._gameState.view.height / 2,
+    //   },
+    //   this._gameState.mousePos
+    // )
+    // const anToTopVec = Angle.add(an, 90)
+
+    // console.log('---')
+    // console.log(this._gameState.camera.angle)
+    // console.log(anToTopVec)
+
+    // if (anToTopVec > 10) {
+    //   // this._gameState.camera.angle = this._gameState.camera.angle + 0.1
+    // }
+    const moveAngle = this._gameState.me.rotationAngle
+    const cameraAngle = this._gameState.camera.angle
+
+    // TODO: add clock speeed
+    if (moveAngle > cameraAngle) {
+      // const newCameraAngle =
+      this._gameState.camera.angle--
+    } else {
+      this._gameState.camera.angle++
     }
 
     // rockets
@@ -278,6 +311,7 @@ class GameRoot {
       rayCastRays: s.rayCastRays,
       playground: s.playground,
       rockets: s.rockets,
+      camera: s.camera,
     })
   }
 }

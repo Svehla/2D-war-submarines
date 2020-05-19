@@ -1,4 +1,5 @@
 import { Point } from './gameElementTypes'
+import { distance } from './mathCalc'
 
 /**
  * all game have to use degrees and not native radians
@@ -52,10 +53,10 @@ const angleTo360Range = (ang: number) => (360 + (ang % 360)) % 360
  *
  * first point is the centered one (not now...lol)
  */
-const getAngleBetweenPoints = (angleFromP: Point, angleToP: Point) => {
+const getAngleBetweenPoints = (point1: Point, point2: Point) => {
   // relative coords
-  const xDiff = angleToP.x - angleFromP.x
-  const yDiff = angleToP.y - angleFromP.y
+  const xDiff = point2.x - point1.x
+  const yDiff = point2.y - point1.y
   if (xDiff === 0 && yDiff === 0) {
     return 0
   }

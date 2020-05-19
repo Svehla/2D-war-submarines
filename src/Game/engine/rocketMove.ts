@@ -6,5 +6,4 @@ export const calcNewRocketsPos = (rockets: GameElementRocket[], timeSinceLastTic
     x: x - rest.direction.x * (rest.secSpeed / timeSinceLastTick),
     y: y - rest.direction.y * (rest.secSpeed / timeSinceLastTick),
   }))
-  //
 }
