@@ -1,10 +1,8 @@
 # 2D war submrines
 
-Game was originally forked and inspired from [JLS breakdown](https://github.com/Svehla/JLS-breakdown)
-
 ## Preview
 
-[Game is temporary deployed this url: http://submarine.svehlik.eu/](http://submarine.svehlik.eu)
+[Game is deployed here: http://submarine.svehlik.eu/](http://submarine.svehlik.eu)
 
 ## Screenshot
 
