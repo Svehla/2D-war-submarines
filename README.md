@@ -2,7 +2,7 @@
 
 ## Preview
 
-[Game is deployed here: http://submarine.svehlik.eu/](http://submarine.svehlik.eu)
+[Game is deployed here: https://svehla.github.io/2D-war-submarines/](https://svehla.github.io/2D-war-submarines/)
 
 ## Screenshot
 
